@@ -21,6 +21,8 @@ affinity_daily_df <- read_csv("https://raw.githubusercontent.com/OpportunityInsi
 ```
 ## Join the datasets we're interested in into one dataset.
 
+Here we join the datasets of interest based on a shared date and state of measurements.
+
 ```{r join_tibbles}
 df <- inner_join(covid_daily_df, move_daily_df, by = c("year", "month", "day", "statefips"))
 
