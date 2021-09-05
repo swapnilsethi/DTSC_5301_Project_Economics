@@ -28,5 +28,63 @@ df <- inner_join(covid_daily_df, move_daily_df, by = c("year", "month", "day", "
 
 df <- inner_join(df, affinity_daily_df, by = c("year", "month", "day", "statefips"))
 
+#There's definitely a better way to do this, I just don't know what it is.
+
+df <- df %>% mutate(spend_all = as.double(spend_all), 
+                    gps_parks = as.double(gps_parks),
+                    new_case_count = as.double(new_case_count),
+                    new_death_count = as.double(new_death_count),
+                    case_count = as.double(case_count),
+                    death_count = as.double(death_count),
+                    vaccine_count = as.double(vaccine_count),
+                    fullvaccine_count = as.double(fullvaccine_count),
+                    new_vaccine_count = as.double(new_vaccine_count),
+                    new_fullvaccine_count = as.double(new_fullvaccine_count),
+                    new_test_count = as.double(new_test_count),
+                    test_count = as.double(test_count),
+                    new_case_rate = as.double(new_case_rate),
+                    case_rate = as.double(case_rate),
+                    new_death_rate = as.double(new_death_rate),
+                    death_rate = as.double(death_rate),
+                    new_test_rate = as.double(new_test_rate),
+                    test_rate = as.double(test_rate),
+                    new_vaccine_rate = as.double(new_vaccine_rate),
+                    vaccine_rate = as.double(vaccine_rate),
+                    new_fullvaccine_rate = as.double(new_fullvaccine_rate),
+                    fullvaccine_rate = as.double(fullvaccine_rate),
+                    gps_transit_stations = as.double(gps_transit_stations),
+                    spend_aap = as.double(spend_aap),
+                    spend_acf = as.double(spend_acf),
+                    spend_aer = as.double(spend_aer),
+                    spend_apg = as.double(spend_apg),
+                    spend_durables = as.double(spend_durables),
+                    spend_nondurables = as.double(spend_nondurables),
+                    spend_grf = as.double(spend_grf),
+                    spend_gen = as.double(spend_gen),
+                    spend_hic = as.double(spend_hic),
+                    spend_hcs = as.double(spend_hcs),
+                    spend_inpersonmisc = as.double(spend_inpersonmisc),
+                    spend_remoteservices = as.double(spend_remoteservices),
+                    spend_sgh = as.double(spend_sgh),
+                    spend_tws = as.double(spend_tws),
+                    spend_retail_w_grocery = as.double(spend_retail_w_grocery),
+                    spend_retail_no_grocery = as.double(spend_retail_no_grocery),
+                    spend_all_incmiddle = as.double(spend_all_incmiddle),
+                    spend_all_q1 = as.double(spend_all_q1),
+                    spend_all_q2 = as.double(spend_all_q2),
+                    spend_all_q3 = as.double(spend_all_q3),
+                    spend_all_q4 = as.double(spend_all_q4),
+                    statefips = as.character(statefips))
+
 glimpse(df)
 ```
+
+### Plotting spending over time by state
+```{r}
+# https://tidyr.tidyverse.org/reference/unite.html
+df <- df %>% unite("date", year:month:day, remove = FALSE)
+ggplot(df, aes(y = spend_all, x = date, color = statefips)) + geom_point()
+```
+
+
+
