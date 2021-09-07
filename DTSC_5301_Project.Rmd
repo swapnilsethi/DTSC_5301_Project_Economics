@@ -1,14 +1,17 @@
 ---
 title: "DTSC 5301 PROJECT"
-author: ""
+author: ''
 date: "9/2/2021"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
+library(lubridate)
 ```
 
 ## Read in Data from GitHub Repository
@@ -79,12 +82,22 @@ df <- df %>% mutate(spend_all = as.double(spend_all),
 glimpse(df)
 ```
 
-### Plotting spending over time by state
-```{r}
+### Plotting spending over time for all states and categories
+```{r plot_spend_all}
 # https://tidyr.tidyverse.org/reference/unite.html
-df <- df %>% unite("date", year:month:day, remove = FALSE)
-ggplot(df, aes(y = spend_all, x = date, color = statefips)) + geom_point()
+df <- df %>% unite("date", day:month:year, remove = FALSE, sep = "-")
+
+# https://lubridate.tidyverse.org/reference/ymd.html
+df$date <- dmy(df$date)
+
+# https://stackoverflow.com/questions/38815996/r-adding-geom-vline-labels-to-geom-histogram-labels
+ggplot(df, aes(x=date, y=spend_all)) + geom_smooth() + geom_vline(xintercept = as.Date("2020-04-12")) + geom_vline(xintercept = as.Date("2021-01-01")) + geom_vline(xintercept = as.Date("2021-03-01")) + geom_text(aes(x=as.Date("2020-05-28"), label="1st Check", color="red"), angle=45, y = 0) + geom_text(aes(x=as.Date("2020-11-05"), label="2nd Check", color="green"), angle=45, y = -.1) + geom_text(aes(x=as.Date("2021-04-25"), label="3rd Check", color="blue"), angle=45, y = -.1)
 ```
+
+
+
+
+
 
 
 
