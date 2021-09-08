@@ -79,19 +79,27 @@ df <- df %>% mutate(spend_all = as.double(spend_all),
                     spend_all_q4 = as.double(spend_all_q4),
                     statefips = as.character(statefips))
 
+
 glimpse(df)
 ```
-
-### Plotting spending over time for all states and categories
-```{r plot_spend_all}
+### Combine "month", "day", and "year" columns into a "date" column
+```{r clean_dates}
 # https://tidyr.tidyverse.org/reference/unite.html
 df <- df %>% unite("date", day:month:year, remove = FALSE, sep = "-")
 
 # https://lubridate.tidyverse.org/reference/ymd.html
 df$date <- dmy(df$date)
+```
+
+
+### Plotting spending over time for all states and categories
+
+The dates for the stimulus checks were approximated from [this article](https://en.as.com/en/2021/08/25/latest_news/1629920433_478504.html).  
+```{r plot_spend_all}
 
 # https://stackoverflow.com/questions/38815996/r-adding-geom-vline-labels-to-geom-histogram-labels
-ggplot(df, aes(x=date, y=spend_all)) + geom_smooth() + geom_vline(xintercept = as.Date("2020-04-12")) + geom_vline(xintercept = as.Date("2021-01-01")) + geom_vline(xintercept = as.Date("2021-03-01")) + geom_text(aes(x=as.Date("2020-05-28"), label="1st Check", color="red"), angle=45, y = 0) + geom_text(aes(x=as.Date("2020-11-05"), label="2nd Check", color="green"), angle=45, y = -.1) + geom_text(aes(x=as.Date("2021-04-25"), label="3rd Check", color="blue"), angle=45, y = -.1)
+
+ggplot(df, aes(x=date, y=spend_all)) + geom_smooth() + geom_vline(xintercept = as.Date("2020-04-12")) + geom_vline(xintercept = as.Date("2021-01-01")) + geom_vline(xintercept = as.Date("2021-03-01")) + geom_text(aes(x=as.Date("2020-05-28"), label="1st Check"), color="red", angle=45, y = 0) + geom_text(aes(x=as.Date("2020-11-05"), label="2nd Check"), color="green", angle=45, y = -.1) + geom_text(aes(x=as.Date("2021-04-25"), label="3rd Check"), color="blue", angle=45, y = -.1)
 ```
 
 
