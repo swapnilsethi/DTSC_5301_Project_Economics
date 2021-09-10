@@ -110,3 +110,55 @@ ggplot(df, aes(x = date, y = spend_all)) +
   geom_text(aes(x = as.Date("2020-11-05"), label = "2nd Check"), color = "green", angle = 45, y = -.1) +
   geom_text(aes(x = as.Date("2021-04-25"), label = "3rd Check"), color = "blue", angle = 45, y = -.1)
 ```
+```{r}
+ggplot(df, aes(x = date, y = new_death_rate)) +
+  geom_smooth() +
+  geom_vline(xintercept = as.Date("2020-04-12")) +
+  geom_vline(xintercept = as.Date("2021-01-01")) +
+  geom_vline(xintercept = as.Date("2021-03-01")) +
+  geom_text(aes(x = as.Date("2020-05-28"), label = "1st Check"), color = "red", angle = 45, y = 0) +
+  geom_text(aes(x = as.Date("2020-11-05"), label = "2nd Check"), color = "green", angle = 45, y = -.1) +
+  geom_text(aes(x = as.Date("2021-04-25"), label = "3rd Check"), color = "blue", angle = 45, y = -.1)
+```
+```{r}
+ggplot(df, aes(x = date, y = new_case_rate)) +
+  geom_smooth() +
+  geom_vline(xintercept = as.Date("2020-04-12")) +
+  geom_vline(xintercept = as.Date("2021-01-01")) +
+  geom_vline(xintercept = as.Date("2021-03-01")) +
+  geom_text(aes(x = as.Date("2020-05-28"), label = "1st Check"), color = "red", angle = 45, y = 0) +
+  geom_text(aes(x = as.Date("2020-11-05"), label = "2nd Check"), color = "green", angle = 45, y = -.1) +
+  geom_text(aes(x = as.Date("2021-04-25"), label = "3rd Check"), color = "blue", angle = 45, y = -.1)
+```
+
+```{r}
+ggplot(df, aes(x = date, y = new_vaccine_rate)) +
+  geom_smooth() +
+  geom_vline(xintercept = as.Date("2020-04-12")) +
+  geom_vline(xintercept = as.Date("2021-01-01")) +
+  geom_vline(xintercept = as.Date("2021-03-01")) +
+  geom_text(aes(x = as.Date("2020-05-28"), label = "1st Check"), color = "red", angle = 45, y = 0) +
+  geom_text(aes(x = as.Date("2020-11-05"), label = "2nd Check"), color = "green", angle = 45, y = -.1) +
+  geom_text(aes(x = as.Date("2021-04-25"), label = "3rd Check"), color = "blue", angle = 45, y = -.1)
+```
+
+```{r}
+ggplot(df, aes(x = gps_retail_and_recreation, y = gps_parks)) +
+  geom_point(aes(color=statefips))
+```
+```{r}
+ggplot(df, aes(x = new_case_rate, y = gps_grocery_and_pharmacy)) +
+  geom_point(aes(color=statefips))
+```
+
+```{r}
+ggplot(df, aes(x = new_case_rate, y = gps_transit_stations)) +
+  geom_point(aes(color=statefips))
+```
+
+
+
+```{r}
+ggplot(df, aes(x = new_case_rate, y = gps_residential)) +
+  geom_point(aes(color=statefips))
+```
