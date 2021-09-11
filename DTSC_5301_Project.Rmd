@@ -21,6 +21,14 @@ covid_daily_df <- read_csv("https://raw.githubusercontent.com/OpportunityInsight
 move_daily_df <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/Google%20Mobility%20-%20State%20-%20Daily.csv")
 
 affinity_daily_df <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/Affinity%20-%20State%20-%20Daily.csv")
+
+job_listings_weekly_df <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/Burning%20Glass%20-%20State%20-%20Weekly.csv")
+
+employment_daily_df <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/Employment%20-%20State%20-%20Daily.csv")
+
+ui_claims_weekly_df <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/UI%20Claims%20-%20State%20-%20Weekly.csv")
+
+state_id <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/GeoIDs%20-%20State.csv")
 ```
 ## Join the datasets we're interested in into one dataset.
 
@@ -31,59 +39,20 @@ df <- inner_join(covid_daily_df, move_daily_df, by = c("year", "month", "day", "
 
 df <- inner_join(df, affinity_daily_df, by = c("year", "month", "day", "statefips"))
 
-# There's definitely a better way to do this, I just don't know what it is.
-
-df <- df %>% mutate(
-  spend_all = as.double(spend_all),
-  gps_parks = as.double(gps_parks),
-  new_case_count = as.double(new_case_count),
-  new_death_count = as.double(new_death_count),
-  case_count = as.double(case_count),
-  death_count = as.double(death_count),
-  vaccine_count = as.double(vaccine_count),
-  fullvaccine_count = as.double(fullvaccine_count),
-  new_vaccine_count = as.double(new_vaccine_count),
-  new_fullvaccine_count = as.double(new_fullvaccine_count),
-  new_test_count = as.double(new_test_count),
-  test_count = as.double(test_count),
-  new_case_rate = as.double(new_case_rate),
-  case_rate = as.double(case_rate),
-  new_death_rate = as.double(new_death_rate),
-  death_rate = as.double(death_rate),
-  new_test_rate = as.double(new_test_rate),
-  test_rate = as.double(test_rate),
-  new_vaccine_rate = as.double(new_vaccine_rate),
-  vaccine_rate = as.double(vaccine_rate),
-  new_fullvaccine_rate = as.double(new_fullvaccine_rate),
-  fullvaccine_rate = as.double(fullvaccine_rate),
-  gps_transit_stations = as.double(gps_transit_stations),
-  spend_aap = as.double(spend_aap),
-  spend_acf = as.double(spend_acf),
-  spend_aer = as.double(spend_aer),
-  spend_apg = as.double(spend_apg),
-  spend_durables = as.double(spend_durables),
-  spend_nondurables = as.double(spend_nondurables),
-  spend_grf = as.double(spend_grf),
-  spend_gen = as.double(spend_gen),
-  spend_hic = as.double(spend_hic),
-  spend_hcs = as.double(spend_hcs),
-  spend_inpersonmisc = as.double(spend_inpersonmisc),
-  spend_remoteservices = as.double(spend_remoteservices),
-  spend_sgh = as.double(spend_sgh),
-  spend_tws = as.double(spend_tws),
-  spend_retail_w_grocery = as.double(spend_retail_w_grocery),
-  spend_retail_no_grocery = as.double(spend_retail_no_grocery),
-  spend_all_incmiddle = as.double(spend_all_incmiddle),
-  spend_all_q1 = as.double(spend_all_q1),
-  spend_all_q2 = as.double(spend_all_q2),
-  spend_all_q3 = as.double(spend_all_q3),
-  spend_all_q4 = as.double(spend_all_q4),
-  statefips = as.character(statefips)
-)
-
-
-glimpse(df)
+df <- inner_join(df, employment_daily_df, by = c("year", "month", "day", "statefips"))
 ```
+
+
+
+```{r}
+
+df <- full_join(df, job_listings_weekly_df, by = c("year", "month", "day" = "day_endofweek", "statefips"))
+
+df <- full_join(df, ui_claims_weekly_df, by = c("year", "month", "day" = "day_endofweek", "statefips"))
+
+df <- left_join(df, state_id, by = c("statefips"))
+```
+
 ### Combine "month", "day", and "year" columns into a "date" column
 ```{r clean_dates}
 # https://tidyr.tidyverse.org/reference/unite.html
@@ -91,6 +60,42 @@ df <- df %>% unite("date", day:month:year, remove = FALSE, sep = "-")
 
 # https://lubridate.tidyverse.org/reference/ymd.html
 df$date <- dmy(df$date)
+
+df <- df %>% mutate(week = week(date))
+```
+
+```{r}
+# There's definitely a better way to do this, I just don't know what it is.
+
+df <- df %>%
+  select(date, year, month, day, week, statename, stateabbrev, state_pop2019, initclaims_rate_regular, contclaims_rate_regular, bg_posts, emp, spend_all, gps_retail_and_recreation, gps_grocery_and_pharmacy, gps_parks, gps_transit_stations, gps_workplaces, gps_residential, gps_away_from_home, new_case_count, new_death_count, case_count, death_count) %>%
+  mutate(
+    spend_all = as.double(spend_all),
+    gps_parks = as.double(gps_parks),
+    new_case_count = as.double(new_case_count),
+    new_death_count = as.double(new_death_count),
+    case_count = as.double(case_count),
+    death_count = as.double(death_count),
+    gps_transit_stations = as.double(gps_transit_stations),
+    emp = as.double(emp),
+  )
+
+
+glimpse(df)
+```
+
+```{r}
+# https://stackoverflow.com/questions/45576805/how-to-replace-all-na-in-a-dataframe-using-tidyrreplace-na
+
+df <- df %>% replace(is.na(.), 0)
+```
+
+```{r}
+df_weekly <- df %>%
+  group_by(year, week, stateabbrev) %>%
+  summarize(spend_all = sum(spend_all), initclaims_rate_regular = sum(initclaims_rate_regular), contclaims_rate_regular = sum(contclaims_rate_regular), bg_posts = sum(bg_posts), emp = sum(emp), gps_retail_and_recreation = sum(gps_retail_and_recreation), gps_grocery_and_pharmacy = sum(gps_grocery_and_pharmacy), gps_parks = sum(gps_parks), gps_transit_stations = sum(gps_transit_stations), gps_workplaces = sum(gps_workplaces), gps_residential = sum(gps_residential), gps_away_from_home = sum(gps_away_from_home), new_case_count = sum(new_case_count), new_death_count = sum(new_death_count), case_count = max(case_count), death_count = max(death_count), date = max(date))
+
+df_weekly <- left_join(df_weekly, state_id, by = c("stateabbrev"))
 ```
 
 
@@ -110,55 +115,31 @@ ggplot(df, aes(x = date, y = spend_all)) +
   geom_text(aes(x = as.Date("2020-11-05"), label = "2nd Check"), color = "green", angle = 45, y = -.1) +
   geom_text(aes(x = as.Date("2021-04-25"), label = "3rd Check"), color = "blue", angle = 45, y = -.1)
 ```
-```{r}
-ggplot(df, aes(x = date, y = new_death_rate)) +
-  geom_smooth() +
-  geom_vline(xintercept = as.Date("2020-04-12")) +
-  geom_vline(xintercept = as.Date("2021-01-01")) +
-  geom_vline(xintercept = as.Date("2021-03-01")) +
-  geom_text(aes(x = as.Date("2020-05-28"), label = "1st Check"), color = "red", angle = 45, y = 0) +
-  geom_text(aes(x = as.Date("2020-11-05"), label = "2nd Check"), color = "green", angle = 45, y = -.1) +
-  geom_text(aes(x = as.Date("2021-04-25"), label = "3rd Check"), color = "blue", angle = 45, y = -.1)
-```
-```{r}
-ggplot(df, aes(x = date, y = new_case_rate)) +
-  geom_smooth() +
-  geom_vline(xintercept = as.Date("2020-04-12")) +
-  geom_vline(xintercept = as.Date("2021-01-01")) +
-  geom_vline(xintercept = as.Date("2021-03-01")) +
-  geom_text(aes(x = as.Date("2020-05-28"), label = "1st Check"), color = "red", angle = 45, y = 0) +
-  geom_text(aes(x = as.Date("2020-11-05"), label = "2nd Check"), color = "green", angle = 45, y = -.1) +
-  geom_text(aes(x = as.Date("2021-04-25"), label = "3rd Check"), color = "blue", angle = 45, y = -.1)
-```
-
-```{r}
-ggplot(df, aes(x = date, y = new_vaccine_rate)) +
-  geom_smooth() +
-  geom_vline(xintercept = as.Date("2020-04-12")) +
-  geom_vline(xintercept = as.Date("2021-01-01")) +
-  geom_vline(xintercept = as.Date("2021-03-01")) +
-  geom_text(aes(x = as.Date("2020-05-28"), label = "1st Check"), color = "red", angle = 45, y = 0) +
-  geom_text(aes(x = as.Date("2020-11-05"), label = "2nd Check"), color = "green", angle = 45, y = -.1) +
-  geom_text(aes(x = as.Date("2021-04-25"), label = "3rd Check"), color = "blue", angle = 45, y = -.1)
-```
 
 ```{r}
 ggplot(df, aes(x = gps_retail_and_recreation, y = gps_parks)) +
-  geom_point(aes(color=statefips))
-```
-```{r}
-ggplot(df, aes(x = new_case_rate, y = gps_grocery_and_pharmacy)) +
-  geom_point(aes(color=statefips))
+  geom_point(aes(color = stateabbrev))
 ```
 
 ```{r}
-ggplot(df, aes(x = new_case_rate, y = gps_transit_stations)) +
-  geom_point(aes(color=statefips))
+
+# https://stackoverflow.com/questions/38815996/r-adding-geom-vline-labels-to-geom-histogram-labels
+
+ggplot(df, aes(x = date, y = gps_parks)) +
+  geom_smooth() +
+  geom_vline(xintercept = as.Date("2020-04-12")) +
+  geom_vline(xintercept = as.Date("2021-01-01")) +
+  geom_vline(xintercept = as.Date("2021-03-01")) +
+  geom_text(aes(x = as.Date("2020-05-28"), label = "1st Check"), color = "red", angle = 45, y = 0) +
+  geom_text(aes(x = as.Date("2020-11-05"), label = "2nd Check"), color = "green", angle = 45, y = -.1) +
+  geom_text(aes(x = as.Date("2021-04-25"), label = "3rd Check"), color = "blue", angle = 45, y = -.1)
 ```
 
-
-
 ```{r}
-ggplot(df, aes(x = new_case_rate, y = gps_residential)) +
-  geom_point(aes(color=statefips))
+
+# https://stackoverflow.com/questions/38815996/r-adding-geom-vline-labels-to-geom-histogram-labels
+
+ggplot(df_weekly, aes(x = date, y = spend_all, color = stateabbrev)) +
+  geom_point() +
+  facet_wrap(. ~ stateabbrev)
 ```
