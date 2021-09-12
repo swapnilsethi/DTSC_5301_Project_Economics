@@ -95,7 +95,7 @@ df <- df %>% replace(is.na(.), 0)
 ```{r}
 df_weekly <- df %>%
   group_by(year, week, stateabbrev) %>%
-  summarize(spend_all = sum(spend_all), initclaims_rate_regular = sum(initclaims_rate_regular), contclaims_rate_regular = sum(contclaims_rate_regular), bg_posts = sum(bg_posts), emp = sum(emp), gps_retail_and_recreation = sum(gps_retail_and_recreation), gps_grocery_and_pharmacy = sum(gps_grocery_and_pharmacy), gps_parks = sum(gps_parks), gps_transit_stations = sum(gps_transit_stations), gps_workplaces = sum(gps_workplaces), gps_residential = sum(gps_residential), gps_away_from_home = sum(gps_away_from_home), new_case_count = sum(new_case_count), new_death_count = sum(new_death_count), case_count = max(case_count), death_count = max(death_count), date = max(date))
+  summarize(spend_all = mean(spend_all), initclaims_rate_regular = mean(initclaims_rate_regular), contclaims_rate_regular = mean(contclaims_rate_regular), bg_posts = sum(bg_posts), emp = sum(emp), gps_retail_and_recreation = mean(gps_retail_and_recreation), gps_grocery_and_pharmacy = mean(gps_grocery_and_pharmacy), gps_parks = mean(gps_parks), gps_transit_stations = mean(gps_transit_stations), gps_workplaces = mean(gps_workplaces), gps_residential = mean(gps_residential), gps_away_from_home = mean(gps_away_from_home), new_case_count = sum(new_case_count), new_death_count = sum(new_death_count), case_count = max(case_count), death_count = max(death_count), date = max(date))
 
 df_weekly <- left_join(df_weekly, state_id, by = c("stateabbrev"))
 ```
