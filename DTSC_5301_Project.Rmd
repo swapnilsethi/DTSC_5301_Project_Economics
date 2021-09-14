@@ -167,9 +167,8 @@ summary(lm)
 ```
 ### Summarize the Model
 
-```{r}
+Based on the information displayed above, all of the variables we are regressing on are statistically significant for predicting the overall spending.
 
-```
 
 ### Plotting spending over time for all states and categories
 
