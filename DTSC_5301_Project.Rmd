@@ -15,7 +15,7 @@ library(lubridate)
 ```
 
 ## Read in Data from GitHub Repository
-```{r get_data}
+```{r get_data, cache = TRUE}
 covid_daily_df <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/COVID%20-%20State%20-%20Daily.csv")
 
 move_daily_df <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/Google%20Mobility%20-%20State%20-%20Daily.csv")
@@ -94,6 +94,8 @@ glimpse(df)
 #colSums(is.na(df))
 
 df <- df %>% replace(is.na(.), 0)
+df <- df %>% filter(spend_all != 0)
+
 
 ```
 
@@ -102,18 +104,43 @@ df_weekly <- df %>%
   group_by(year, week, stateabbrev) %>%
   summarize(spend_all = mean(spend_all), contclaims_rate_combined = mean(contclaims_rate_combined), bg_posts = mean(bg_posts), emp = mean(emp), gps_retail_and_recreation = mean(gps_retail_and_recreation), gps_grocery_and_pharmacy = mean(gps_grocery_and_pharmacy), gps_parks = mean(gps_parks), gps_transit_stations = mean(gps_transit_stations), gps_workplaces = mean(gps_workplaces), gps_residential = mean(gps_residential), gps_away_from_home = mean(gps_away_from_home), new_case_count = sum(new_case_count), new_death_count = sum(new_death_count), case_count = max(case_count), death_count = max(death_count), date = max(date))
 
+df_weekly <- df_weekly %>% mutate(lagged_spend_one = spend_all - lag(spend_all, order_by = date), 
+                                  lagged_spend_two = spend_all - lag(spend_all, n = 2, order_by = date),
+                                  lagged_spend_three = spend_all - lag(spend_all, n = 3, order_by = date))
+
 df_weekly <- left_join(df_weekly, state_id, by = c("stateabbrev"))
 ```
-
-```{r add_stimulus_checks}
-
-df_weekly <- df_weekly %>% mutate(first_check = (if (date <= ymd("2020-04-15")) 0 else 1), second_check = (if (date <= ymd("2021-01-04")) 0 else 1), third_check = (if (date <= ymd("2021-03-17")) 0 else 1))
+```{r}
 
 ```
 
+```{r add_stimulus_checks, warning = FALSE}
+
+df_weekly <- df_weekly %>% mutate(first_check = (if (date < ymd("2020-04-15")) 0 
+                                                 else 1), 
+                                  second_check = (if (date < ymd("2021-01-04")) 0 
+                                                  else 1), 
+                                  third_check = (if (date < ymd("2021-03-18")) 0 
+                                                 else 1))
+
+#df_weekly <- df_weekly %>% mutate(first_check = (if (date < ymd("2020-04-15") | date >= ymd("2020-07-15")) 0 
+#                                                 else 1), 
+#                                  second_check = (if (date < ymd("2021-01-04") | date >= ymd("2021-03-16")) 0 
+#                                                  else 1), 
+#                                  third_check = (if (date < ymd("2021-03-18") | date >= ymd("2021-06-18")) 0 
+#                                                 else 1))
+
+```
 
 ```{r}
-lm <- lm(spend_all ~ 0 + gps_retail_and_recreation + emp + first_check + second_check + third_check, df_weekly)
+sum(sapply(df_weekly, is.infinite))
+df_weekly <- df_weekly %>% filter(!is.infinite(third_check))
+sum(sapply(df_weekly, is.infinite))
+```
+
+```{r}
+lm <- lm(spend_all ~ gps_retail_and_recreation + emp + first_check + 
+           second_check + third_check, df_weekly)
 summary(lm)
 ```
 
@@ -133,6 +160,7 @@ The dates for the stimulus checks were approximated from [this article](https://
 # https://stackoverflow.com/questions/38815996/r-adding-geom-vline-labels-to-geom-histogram-labels
 
 ggplot(df, aes(x = date, y = spend_all)) +
+  geom_point() +
   geom_smooth() +
   geom_vline(xintercept = as.Date("2020-04-12")) +
   geom_vline(xintercept = as.Date("2021-01-01")) +
