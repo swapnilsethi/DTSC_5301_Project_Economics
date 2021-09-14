@@ -29,21 +29,20 @@ employment_daily_df <- read_csv("https://raw.githubusercontent.com/OpportunityIn
 ui_claims_weekly_df <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/UI%20Claims%20-%20State%20-%20Weekly.csv")
 
 state_id <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/GeoIDs%20-%20State.csv")
+
+#stimulus <- read_csv("")
 ```
 ## Join the datasets we're interested in into one dataset.
 
 Here we join the datasets of interest based on a shared date and state of measurements.
 
 ```{r join_tibbles}
-df <- inner_join(covid_daily_df, move_daily_df, by = c("year", "month", "day", "statefips"))
+df <- left_join(affinity_daily_df, move_daily_df, by = c("year", "month", "day", "statefips"))
 
-df <- inner_join(df, affinity_daily_df, by = c("year", "month", "day", "statefips"))
+df <- left_join(df, covid_daily_df, by = c("year", "month", "day", "statefips"))
 
-df <- inner_join(df, employment_daily_df, by = c("year", "month", "day", "statefips"))
+df <- left_join(df, employment_daily_df, by = c("year", "month", "day", "statefips"))
 ```
-
-
-##Ujas's comment
 
 
 ```{r}
@@ -70,7 +69,7 @@ df <- df %>% mutate(week = week(date))
 # There's definitely a better way to do this, I just don't know what it is.
 
 df <- df %>%
-  select(date, year, month, day, week, statename, stateabbrev, state_pop2019, initclaims_rate_regular, contclaims_rate_regular, bg_posts, emp, spend_all, gps_retail_and_recreation, gps_grocery_and_pharmacy, gps_parks, gps_transit_stations, gps_workplaces, gps_residential, gps_away_from_home, new_case_count, new_death_count, case_count, death_count) %>%
+  select(date, year, month, day, week, statename, stateabbrev, state_pop2019, initclaims_rate_regular, contclaims_rate_combined, bg_posts, emp, spend_all, gps_retail_and_recreation, gps_grocery_and_pharmacy, gps_parks, gps_transit_stations, gps_workplaces, gps_residential, gps_away_from_home, new_case_count, new_death_count, case_count, death_count) %>%
   mutate(
     spend_all = as.double(spend_all),
     gps_parks = as.double(gps_parks),
@@ -80,25 +79,50 @@ df <- df %>%
     death_count = as.double(death_count),
     gps_transit_stations = as.double(gps_transit_stations),
     emp = as.double(emp),
+    contclaims_rate_combined = as.double(contclaims_rate_combined)
   )
 
 
 glimpse(df)
 ```
 
-```{r}
+```{r remove_na}
 # https://stackoverflow.com/questions/45576805/how-to-replace-all-na-in-a-dataframe-using-tidyrreplace-na
 
+#length(df$date)
+
+#colSums(is.na(df))
+
 df <- df %>% replace(is.na(.), 0)
+
 ```
 
 ```{r}
 df_weekly <- df %>%
   group_by(year, week, stateabbrev) %>%
-  summarize(spend_all = mean(spend_all), initclaims_rate_regular = mean(initclaims_rate_regular), contclaims_rate_regular = mean(contclaims_rate_regular), bg_posts = sum(bg_posts), emp = sum(emp), gps_retail_and_recreation = mean(gps_retail_and_recreation), gps_grocery_and_pharmacy = mean(gps_grocery_and_pharmacy), gps_parks = mean(gps_parks), gps_transit_stations = mean(gps_transit_stations), gps_workplaces = mean(gps_workplaces), gps_residential = mean(gps_residential), gps_away_from_home = mean(gps_away_from_home), new_case_count = sum(new_case_count), new_death_count = sum(new_death_count), case_count = max(case_count), death_count = max(death_count), date = max(date))
+  summarize(spend_all = mean(spend_all), contclaims_rate_combined = mean(contclaims_rate_combined), bg_posts = mean(bg_posts), emp = mean(emp), gps_retail_and_recreation = mean(gps_retail_and_recreation), gps_grocery_and_pharmacy = mean(gps_grocery_and_pharmacy), gps_parks = mean(gps_parks), gps_transit_stations = mean(gps_transit_stations), gps_workplaces = mean(gps_workplaces), gps_residential = mean(gps_residential), gps_away_from_home = mean(gps_away_from_home), new_case_count = sum(new_case_count), new_death_count = sum(new_death_count), case_count = max(case_count), death_count = max(death_count), date = max(date))
 
 df_weekly <- left_join(df_weekly, state_id, by = c("stateabbrev"))
 ```
+
+```{r add_stimulus_checks}
+
+df_weekly <- df_weekly %>% mutate(first_check = (if (date <= ymd("2020-04-15")) 0 else 1), second_check = (if (date <= ymd("2021-01-04")) 0 else 1), third_check = (if (date <= ymd("2021-03-17")) 0 else 1))
+
+```
+
+
+```{r}
+lm <- lm(spend_all ~ 0 + gps_retail_and_recreation + emp + first_check + second_check + third_check, df_weekly)
+summary(lm)
+```
+
+```{r}
+
+view(df_weekly)
+
+```
+
 
 
 ### Plotting spending over time for all states and categories
@@ -145,3 +169,5 @@ ggplot(df_weekly, aes(x = date, y = spend_all, color = stateabbrev)) +
   geom_point() +
   facet_wrap(. ~ stateabbrev)
 ```
+
+
