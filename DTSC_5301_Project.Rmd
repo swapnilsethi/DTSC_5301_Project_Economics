@@ -5,10 +5,19 @@ date: "9/2/2021"
 output:
   pdf_document: default
   html_document: default
+  word_document: default
 ---
 
 # Question of Interest
 ### We want to know whether or not the stimulus checks sent out by the US government have had a positive impact on the economy (using consumer spending as a proxy for how healthy the economy is).
+
+# Why Should **YOU** Care How Healthy the US Economy Is?
+
+### Why should we care about consumer spending?  It seems like a big picture idea that won't really effect any of us specifically, right?  Wrong.  When the economy is healthy, there are more jobs available.  Those jobs also pay more.  As graduate students, we all want to get good paying jobs as Data Scientists, and that will be more likely to happen more quickly if the economy is healthy.
+
+### This analysis will help us understand how stimulus checks effect the US economy, and therefore, indirectly, the analysis will also help us understand whether or not stimulus checks will help us get good-paying jobs quickly after graduation.
+
+### There is also a long-standing debate between the liberal and conservative political ideologies in the US over whether or not the increase in consumer spending caused by stimulus checks is actually worth the debt incurred by the government when sending out the checks.  While this analysis doesn't cover that, this would be an interesting topic for future research using this dataset.
 
 # Data Source
 ### All of our data was aggregated by Opportunity Insights at https://github.com/OpportunityInsights/EconomicTracker.  In this analysis, we use spending data provided by Affinity Solutions, job postings data from Burning Glass Technologies, COVID data from the CDC, GPS mobility reports from Google, unemployment claims from the Department of Labor, and employment levels from Paychex, Intuit, Earnin and Kronos.
@@ -157,6 +166,8 @@ As you can see from the results above, the number of infinite values in our data
 
 In this code chunk, we fit a linear model to the *gps_retail_and_recreation*, *emp*, *first_check*, *second_check*, and *third_check* features, with the goal of predicting the *spend_all* variable.  The working assumption here is that *spend_all* is a dependent variable, and the others are independent variables.
 
+The reason we chose these five input variables is that *first_check*, *second_check*, and *third_check* are directly relevant to our analysis.  We are trying to identify if these features had a positive or negative effect on the economy. These two features, *gps_retail_and_recreation* and *emp*, were added to help account for change in spending that could not necessarily be accounted for by the *first_check*, *second_check*, and *third_check*.  We chose not to include any other input features because we believe that *gps_retail_and_recreation* and *emp* account for much of the possible variance without over-complicating our linear model.
+
 ```{r}
 lm <- lm(spend_all ~ gps_retail_and_recreation + emp + first_check + 
            second_check + third_check, df_weekly)
@@ -168,6 +179,8 @@ summary(lm)
 ### Summarize the Model
 
 Based on the information displayed above, all of the variables we are regressing on are statistically significant for predicting the overall spending.
+
+Our model is fairly limited in how accurately it predicts overall consumer spending because it is a linear model.  Future analysis could be done using neural networks, gradient boosted decision trees, or recurrent neural networks.  We believe that all of these would be able to learn the nuances of our dataset better than a linear model could.
 
 
 ### Plotting spending over time for all states and categories
