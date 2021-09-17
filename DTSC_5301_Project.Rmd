@@ -176,11 +176,18 @@ lm <- lm(spend_all ~ gps_retail_and_recreation + emp + first_check +
 ```{r}
 summary(lm)
 ```
+```{r}
+plot(lm, which=2)
+```
+
+
 ### Summarize the Model
 
 Based on the information displayed above, all of the variables we are regressing on are statistically significant for predicting the overall spending.
 
-Our model is fairly limited in how accurately it predicts overall consumer spending because it is a linear model.  Future analysis could be done using neural networks, gradient boosted decision trees, or recurrent neural networks.  We believe that all of these would be able to learn the nuances of our dataset better than a linear model could.
+Our model is fairly limited in how accurately it predicts overall consumer spending because it is a linear model, and because we've limited ourselves to regressing on five variables for the sake of model simplicity, rather than the 30+ that we could've regressed on.  
+
+Future analysis could be done using neural networks, gradient boosted decision trees, or recurrent neural networks.  We believe that all of these would be able to learn the nuances of our dataset better than a linear model could.
 
 
 ### Plotting spending over time for all states and categories
@@ -222,6 +229,26 @@ ggplot(df, aes(x = date, y = spend_all)) +
 ggplot(df, aes(x = gps_retail_and_recreation, y = spend_all, color = stateabbrev)) +
   geom_point()
 ```
+
+### Summarize Our Biases
+
+We were expecting to find that the stimulus checks all had a positive impact on consumer spending, because this is the only outcome that makes any economic sense, as far as we can tell.  This effected how we encoded our stimulus check data into feature variables, and it effected how accurate we thought any given model was.  If a model said that a stimulus check caused a decrease in consumer spending, we considered that model to be almost certainly highly inaccurate.
+
+### Summarize Biases in the Data
+
+Our data contains several potential biases that could skew our results.  For example, we use movement data from Google.  This data was likely pulled from android phones, not Apple products.  Imagine, then, that more affluent people tend to purchase Apple products.  If this is true, our movement data will be skewed away from affluent people who may be more likely to spend more, more casually.
+
+Another example of possible bias in our data is that our stimulus check data does not fade out overtime, like the effect of the stimulus data presumably does.  With the way we're encoding the stimulus data, if we had a fifty year period with a stimulus check in the first year, the data for the next forty nine years would still have the effect from the first check listed as a feature.  This seems unrealistic, but we could not find a better way to encode the stimulus check data.
+
+# Conclusion
+
+The coefficients of our linear model seem to indicate that, unsurprisingly, giving out stimulus checks is correlated with an increase in overall consumer spending.
+
+Therefore, *if* high consumer spending is correlated with a healthier economy, then it seems reasonable to conclude that giving out stimulus checks is also good for the economy, and if they are good for the economy, they are also good for our chances of getting jobs that pay well post-graduation.
+
+The "if" at the beginning of the previous sentence is a big one, though.  If the government has to go further into debt to send out stimulus checks, then is the net effect of stimulus checks really good for the economy?  We don't know, and this analysis has not considered the effect of increased government debt on the economy.  This would be an interesting topic for future analysis.
+
+
 
 
 
