@@ -26,9 +26,8 @@ output:
 
 "The Economic Impacts of COVID-19: Evidence from a New Public Database Built Using Private Sector Data", by Raj Chetty, John Friedman, Nathaniel Hendren, Michael Stepner, and the Opportunity Insights Team. November 2020. Available at: https://opportunityinsights.org/wp-content/uploads/2020/05/tracker_paper.pdf
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
 
+```{r setup, include=FALSE, tidy=TRUE}
 library(tidyverse)
 library(lubridate)
 ```
@@ -49,7 +48,7 @@ ui_claims_weekly_df <- read_csv("https://raw.githubusercontent.com/OpportunityIn
 
 state_id <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/GeoIDs%20-%20State.csv")
 
-#stimulus <- read_csv("")
+# stimulus <- read_csv("")
 ```
 ## Join the datasets we're interested in into one dataset.
 
@@ -111,14 +110,12 @@ We also drop rows that have 0 spending data because this value is not realistic.
 ```{r remove_na}
 # https://stackoverflow.com/questions/45576805/how-to-replace-all-na-in-a-dataframe-using-tidyrreplace-na
 
-#length(df$date)
+# length(df$date)
 
-#colSums(is.na(df))
+# colSums(is.na(df))
 
 df <- df %>% replace(is.na(.), 0)
 df <- df %>% filter(spend_all != 0)
-
-
 ```
 
 ### Combing Weekly and Daily Data
@@ -144,13 +141,23 @@ Here we add in the data for the COVID stimulus checks.  We do this by creating a
 
 ```{r add_stimulus_checks, warning = FALSE}
 
-df_weekly <- df_weekly %>% mutate(first_check = (if (date < ymd("2020-04-15")) 0 
-                                                 else 1), 
-                                  second_check = (if (date < ymd("2021-01-04")) 0 
-                                                  else 1), 
-                                  third_check = (if (date < ymd("2021-03-18")) 0 
-                                                 else 1))
-
+df_weekly <- df_weekly %>% mutate(
+  first_check = (if (date < ymd("2020-04-15")) {
+    0
+  } else {
+    1
+  }),
+  second_check = (if (date < ymd("2021-01-04")) {
+    0
+  } else {
+    1
+  }),
+  third_check = (if (date < ymd("2021-03-18")) {
+    0
+  } else {
+    1
+  })
+)
 ```
 
 ### Double Check that Data is Clean
@@ -169,15 +176,17 @@ In this code chunk, we fit a linear model to the *gps_retail_and_recreation*, *e
 The reason we chose these five input variables is that *first_check*, *second_check*, and *third_check* are directly relevant to our analysis.  We are trying to identify if these features had a positive or negative effect on the economy. These two features, *gps_retail_and_recreation* and *emp*, were added to help account for change in spending that could not necessarily be accounted for by the *first_check*, *second_check*, and *third_check*.  We chose not to include any other input features because we believe that *gps_retail_and_recreation* and *emp* account for much of the possible variance without over-complicating our linear model.
 
 ```{r}
-lm <- lm(spend_all ~ gps_retail_and_recreation + emp + first_check + 
-           second_check + third_check, df_weekly)
+mod <- lm(spend_all ~ gps_retail_and_recreation + emp + first_check +
+  second_check + third_check, data = df_weekly)
 ```
 
 ```{r}
-summary(lm)
+summary(mod)
 ```
+
+
 ```{r}
-plot(lm, which=2)
+ggplot(df_weekly, aes(x = date, y = spend_all)) + geom_point() + geom_smooth(method = "lm", size = 2)
 ```
 
 
@@ -203,10 +212,20 @@ ggplot(df_weekly, aes(x = date, y = spend_all)) +
   geom_vline(xintercept = as.Date("2020-04-12")) +
   geom_vline(xintercept = as.Date("2021-01-01")) +
   geom_vline(xintercept = as.Date("2021-03-01")) +
-  geom_text(aes(x = as.Date("2020-05-28"), label = "1st Check"), color = "red", angle = 45, y = 0) +
-  geom_text(aes(x = as.Date("2020-11-05"), label = "2nd Check"), color = "dark green", angle = 45, y = -.1) +
-  geom_text(aes(x = as.Date("2021-04-25"), label = "3rd Check"), color = "blue", angle = 45, y = -.1) +
-  labs(title = "What We Wished Our Data Looked Like", subtitle = "Spending Over Time (Compared to Pre-Pandemic Baseline)")
+  geom_text(aes(x = as.Date("2020-05-28"), label = "1st Check"),
+    color = "red", angle = 45, y = 0
+  ) +
+  geom_text(aes(x = as.Date("2020-11-05"), label = "2nd Check"),
+    color = "dark green", angle = 45, y = -.1
+  ) +
+  geom_text(aes(x = as.Date("2021-04-25"), label = "3rd Check"),
+    color = "blue",
+    angle = 45, y = -.1
+  ) +
+  labs(
+    title = "What We Wished Our Data Looked Like",
+    subtitle = "Spending Over Time (Compared to Pre-Pandemic Baseline)"
+  )
 ```
 
 ```{r plot_spend_all, cache = TRUE}
@@ -247,11 +266,3 @@ The coefficients of our linear model seem to indicate that, unsurprisingly, givi
 Therefore, *if* high consumer spending is correlated with a healthier economy, then it seems reasonable to conclude that giving out stimulus checks is also good for the economy, and if they are good for the economy, they are also good for our chances of getting jobs that pay well post-graduation.
 
 The "if" at the beginning of the previous sentence is a big one, though.  If the government has to go further into debt to send out stimulus checks, then is the net effect of stimulus checks really good for the economy?  We don't know, and this analysis has not considered the effect of increased government debt on the economy.  This would be an interesting topic for future analysis.
-
-
-
-
-
-
-
-
