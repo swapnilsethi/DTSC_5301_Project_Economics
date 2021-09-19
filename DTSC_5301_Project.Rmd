@@ -1,10 +1,10 @@
 ---
-title: "DTSC 5301 PROJECT"
-author: ''
+title: "Stimulus Checks and Consumer Spending"
+author: "Aaron Davis, Navya Sonti, Rujula Nadipi, Swapnil Sethi, and Ujas Shah"
 date: "9/2/2021"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
   word_document: default
 ---
 
