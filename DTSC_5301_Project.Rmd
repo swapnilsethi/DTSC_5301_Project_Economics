@@ -38,88 +38,101 @@ library(lubridate)
 
 options(width=30)
 
-covid_daily_df <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/COVID%20-%20State%20-%20Daily.csv")
+covid_daily_df <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/COVID%20-%20State%20-%20Daily.csv", col_types = cols_only(year = "d", month ="d", day ="d",statefips ="c", new_case_count = "d",new_death_count = "d", case_count ="d", death_count ="d"))
 
-move_daily_df <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/Google%20Mobility%20-%20State%20-%20Daily.csv")
+move_daily_df <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/Google%20Mobility%20-%20State%20-%20Daily.csv", col_types = cols_only(year = "d", month ="d", day ="d",statefips = "c", gps_away_from_home = "d",gps_retail_and_recreation = "d", gps_grocery_and_pharmacy = "d", gps_parks = "d",gps_transit_stations ="d",gps_workplaces ="d",gps_residential = "d")) 
 
-affinity_daily_df <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/Affinity%20-%20State%20-%20Daily.csv")
+affinity_daily_df <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/Affinity%20-%20State%20-%20Daily.csv",col_types = cols_only(year = "d", month ="d", day ="d",statefips ="c", spend_all = "d") ) #spending data
 
-job_listings_weekly_df <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/Burning%20Glass%20-%20State%20-%20Weekly.csv")
+job_listings_weekly_df <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/Burning%20Glass%20-%20State%20-%20Weekly.csv",col_types = cols_only(year = "d", month ="d", day_endofweek ="d",statefips ="c",bg_posts = "d")) #Weekly job listing percentages compared with 31-Apr-2020
 
-employment_daily_df <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/Employment%20-%20State%20-%20Daily.csv")
+employment_daily_df <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/Employment%20-%20State%20-%20Daily.csv", col_types = cols_only(year = "d", month ="d", day ="d",statefips ="c",emp = "d")) #relatively with 31-Apr-2021
 
-ui_claims_weekly_df <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/UI%20Claims%20-%20State%20-%20Weekly.csv")
+ui_claims_weekly_df <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/UI%20Claims%20-%20State%20-%20Weekly.csv", col_types = cols_only(year = "d", month ="d", day_endofweek ="d",statefips ="c",initclaims_rate_regular = "d", contclaims_rate_combined = "d")) #unemployment insurance claim
 
-state_id <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/GeoIDs%20-%20State.csv")
+state_id <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/GeoIDs%20-%20State.csv", col_types =  cols_only(statename = "c", stateabbrev ="c", state_pop2019 = "d", statefips ="c"))
 
-# stimulus <- read_csv("")
 ```
+
+### Combine "month", "day", and "year" columns into a "date" column
+###Add date and week columns in daily data
+```{r, message=FALSE, warning=FALSE}
+# https://tidyr.tidyverse.org/reference/unite.html
+covid_daily_df <- covid_daily_df %>% unite("date", day:month:year, remove = FALSE, sep = "-")
+move_daily_df <- move_daily_df %>% unite("date", day:month:year, remove = FALSE, sep = "-")
+affinity_daily_df <- affinity_daily_df %>% unite("date", day:month:year, remove = FALSE, sep = "-")
+employment_daily_df <- employment_daily_df %>% unite("date", day:month:year, remove = FALSE, sep = "-")
+job_listings_weekly_df <- job_listings_weekly_df %>% unite("date", day_endofweek:month:year, remove = FALSE, sep = "-")
+ui_claims_weekly_df <- ui_claims_weekly_df %>% unite("date", day_endofweek:month:year, remove = FALSE, sep = "-")
+
+# https://lubridate.tidyverse.org/reference/ymd.html
+
+covid_daily_df$date <- dmy(covid_daily_df$date) 
+move_daily_df$date <- dmy(move_daily_df$date)
+affinity_daily_df$date <- dmy(affinity_daily_df$date)
+employment_daily_df$date <- dmy(employment_daily_df$date)
+job_listings_weekly_df$date <- dmy(job_listings_weekly_df$date)
+ui_claims_weekly_df$date <- dmy(ui_claims_weekly_df$date)
+
+
+#add week column and aggregate data weekly
+covid_weekly_df <- covid_daily_df %>% mutate(week = epiweek(date)) %>% group_by(year, week, statefips) %>% summarize( new_case_count = sum(new_case_count), new_death_count = sum(new_death_count), case_count = max(case_count), death_count = max(death_count), date = max(date))
+
+#view(covid_weekly_df)
+#
+
+move_weekly_df <- move_daily_df %>% mutate(week = epiweek(date))  %>% group_by(year, week, statefips) %>% summarize(gps_retail_and_recreation = mean(gps_retail_and_recreation), gps_grocery_and_pharmacy = mean(gps_grocery_and_pharmacy), gps_parks = mean(gps_parks), gps_transit_stations = mean(gps_transit_stations), gps_workplaces = mean(gps_workplaces), gps_residential = mean(gps_residential), gps_away_from_home = mean(gps_away_from_home), date=max(date))
+
+
+affinity_weekly_df <- affinity_daily_df %>% mutate(week = epiweek(date)) %>% group_by(year, week, statefips) %>% summarize(spend_all = mean(spend_all), date=max(date))
+
+employment_weekly_df <- employment_daily_df %>% mutate(week = epiweek(date))%>% group_by(year, week, statefips) %>% summarize(date=max(date),emp=mean(emp))
+
+job_listings_weekly_df <- job_listings_weekly_df %>% mutate(date = date+1, week = epiweek(date)) %>% select(-day_endofweek, -month)
+#glimpse(job_listings_weekly_df)
+
+ui_claims_weekly_df <- ui_claims_weekly_df %>% mutate(week = epiweek(date)) %>% select(-day_endofweek, -month)
+#glimpse(ui_claims_weekly_df)
+
+```
+
+
 ## Join the datasets we're interested in into one dataset.
 
 Here we join the datasets of interest based on a shared date and state of measurements.  We are joining weekly datasets (job listings and unemployment insurance claims) with the daily datasets.  This will leave a bunch of **NA** values.  We'll come back to fix that later.
 
 ```{r join_tibbles}
-df <- left_join(affinity_daily_df, move_daily_df, by = c("year", "month", "day", "statefips"))
 
-df <- left_join(df, covid_daily_df, by = c("year", "month", "day", "statefips"))
+df <- left_join(covid_weekly_df, move_weekly_df, by = c("date","year","week", "statefips"))
 
-df <- left_join(df, employment_daily_df, by = c("year", "month", "day", "statefips"))
+df <- left_join(df,affinity_weekly_df , by = c("date","year", "week","statefips"))
 
-df <- full_join(df, job_listings_weekly_df, by = c("year", "month", "day" = "day_endofweek", "statefips"))
+df <- left_join(df, employment_weekly_df, by = c("date","year", "week","statefips"))
 
-df <- full_join(df, ui_claims_weekly_df, by = c("year", "month", "day" = "day_endofweek", "statefips"))
+df <- left_join(df, job_listings_weekly_df, by = c("date","year", "week", "statefips"))
 
-df <- left_join(df, state_id, by = c("statefips"))
-```
+df <- left_join(df, ui_claims_weekly_df, by = c("date","year", "week", "statefips"))
 
-### Combine "month", "day", and "year" columns into a "date" column
-```{r clean_dates}
-# https://tidyr.tidyverse.org/reference/unite.html
-df <- df %>% unite("date", day:month:year, remove = FALSE, sep = "-")
-
-# https://lubridate.tidyverse.org/reference/ymd.html
-df$date <- dmy(df$date)
-
-df <- df %>% mutate(week = week(date))
-```
-
-### Data Selection and Cleaning
-
-In this code chunk, we select the columns that we're interested in from the dataframe that we joined a couple of steps ago.  We could use all of the data in the dataframe, but we choose not to, since not all of the features will be helpful in answering the question of whether or not the stimulus checks have boosted the economy.
-
-```{r condense_data, warning = FALSE}
-
-df <- df %>%
-  select(date, year, month, day, week, statename, stateabbrev, state_pop2019, initclaims_rate_regular, contclaims_rate_combined, bg_posts, emp, spend_all, gps_retail_and_recreation, gps_grocery_and_pharmacy, gps_parks, gps_transit_stations, gps_workplaces, gps_residential, gps_away_from_home, new_case_count, new_death_count, case_count, death_count) %>%
-  mutate(
-    spend_all = as.double(spend_all),
-    gps_parks = as.double(gps_parks),
-    new_case_count = as.double(new_case_count),
-    new_death_count = as.double(new_death_count),
-    case_count = as.double(case_count),
-    death_count = as.double(death_count),
-    gps_transit_stations = as.double(gps_transit_stations),
-    emp = as.double(emp),
-    contclaims_rate_combined = as.double(contclaims_rate_combined)
-  )
-
-
-glimpse(df)
+df_weekly <- left_join(df, state_id, by = c("statefips"))
+#view(df)
 ```
 
 To fix the **NA** values found in our dataset, we replace them all with **0**.  We could have handled them many other ways, like replacing them with the column mean, median, mode, or by training a regression model to fill them based on the rows that were not missing those values.  For this dataset, though, we found that **NA**s are frequently used when the there was no interesting data to report (in other words, the value for the feature was zero).  This can be seen particularly in columns like new_death_count and new_case_count from the CDC COVID dataset.
 
 We also drop rows that have 0 spending data because this value is not realistic.  Also, we need the spend_all column to be clean because we will be using it for plotting and training a regression model later on.
 
-```{r remove_na}
+```{r remove_na, warning=False}
 # https://stackoverflow.com/questions/45576805/how-to-replace-all-na-in-a-dataframe-using-tidyrreplace-na
 
 # length(df$date)
 
 # colSums(is.na(df))
+df_weekly <- df_weekly %>% replace(is.na(.), 0)
+df_weekly <- df_weekly %>% filter(spend_all != 0)
+df_weekly <- df_weekly %>% as.data.frame() %>% format(scientific=FALSE)
+#view(df)
 
-df <- df %>% replace(is.na(.), 0)
-df <- df %>% filter(spend_all != 0)
+glimpse(df_weekly)
 ```
 
 ### Combing Weekly and Daily Data
@@ -128,47 +141,21 @@ In this code chunk, we aggregate daily data into weekly data.  For most columns,
 
 We also add in additional data about the states, at this point (like state name, abbreviation, and population).
 
-```{r}
-df_weekly <- df %>%
-  group_by(year, week, stateabbrev) %>%
-  summarize(spend_all = mean(spend_all), contclaims_rate_combined = mean(contclaims_rate_combined), bg_posts = mean(bg_posts), emp = mean(emp), gps_retail_and_recreation = mean(gps_retail_and_recreation), gps_grocery_and_pharmacy = mean(gps_grocery_and_pharmacy), gps_parks = mean(gps_parks), gps_transit_stations = mean(gps_transit_stations), gps_workplaces = mean(gps_workplaces), gps_residential = mean(gps_residential), gps_away_from_home = mean(gps_away_from_home), new_case_count = sum(new_case_count), new_death_count = sum(new_death_count), case_count = max(case_count), death_count = max(death_count), date = max(date))
-
-df_weekly <- left_join(df_weekly, state_id, by = c("stateabbrev"))
-```
-```{r}
-
-```
 
 ### Adding Stimulus Check Data
 
 Here we add in the data for the COVID stimulus checks.  We do this by creating a feature encoding for each check, where the value for that check is **0** before the check is sent out, and **1** after the check is sent out.  This process created three new features, which we creatively named *first_check*, *second_check*, and *third_check*
 
 ```{r add_stimulus_checks, warning = FALSE}
-
-df_weekly <- df_weekly %>% mutate(
-  first_check = (if (date < ymd("2020-04-15")) {
-    0
-  } else {
-    1
-  }),
-  second_check = (if (date < ymd("2021-01-04")) {
-    0
-  } else {
-    1
-  }),
-  third_check = (if (date < ymd("2021-03-18")) {
-    0
-  } else {
-    1
-  })
-)
+df_weekly$date = as.date(df_weekly$date)
+df_weekly <- df_weekly %>% mutate(first_check = (if (date < ymd("2020-04-15")) {0} else {1}),second_check = (if (date < ymd("2021-01-04")) {  0} else {1}),third_check = (if (date < ymd("2021-03-18")) { 0} else {1}))
 ```
 
 ### Double Check that Data is Clean
 
 We already took care of **NA** values a few steps ago.  Now we need to ensure that there are no infinite values, as well.
 
-```{r}
+```{r,warning=FALSE}
 sum(sapply(df_weekly, is.infinite))
 ```
 As you can see from the results above, the number of infinite values in our dataset currently is `r sum(sapply(df_weekly, is.infinite))`.
@@ -268,7 +255,7 @@ Another example of possible bias in our data is that our stimulus check data doe
 ## Result Summary
 
 The coefficients of our linear model seem to indicate that, unsurprisingly, giving out stimulus checks is correlated with an increase in overall consumer spending.
-
+prob
 Therefore, *if* high consumer spending is correlated with a healthier economy, then it seems reasonable to conclude that giving out stimulus checks is also good for the economy, and if they are good for the economy, they are also good for our chances of getting jobs that pay well post-graduation.
 
 The "if" at the beginning of the previous sentence is a big one, though.  If the government has to go further into debt to send out stimulus checks, then is the net effect of stimulus checks really good for the economy?  We don't know, and this analysis has not considered the effect of increased government debt on the economy.  This would be an interesting topic for future analysis.
