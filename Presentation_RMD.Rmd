@@ -206,16 +206,47 @@ summary(mod)
 ```
 
 
-```{r, echo=FALSE, results="hide", fig.keep="all", message=FALSE}
-ggplot(df_weekly, aes(x = date, y = spend_all)) +
+```{r, echo=FALSE, results="hide", fig.keep="all", message=FALSE, warnings=FALSE, results="hide", fig.keep="all"}
+
+df_weekly <- df_weekly %>% filter(emp != 0)
+
+ggplot(df_weekly, aes(x = as.character(first_check), y = spend_all)) +
   geom_point() +
-  geom_smooth(method = "lm", size = 2)
+  facet_grid(. ~ first_check) +
+  geom_boxplot()
 ```
+
+```{r, echo=FALSE, results="hide", fig.keep="all", message=FALSE, warnings=FALSE, results="hide", fig.keep="all"}
+ggplot(df_weekly, aes(x = as.character(second_check), y = spend_all)) +
+  geom_point() +
+  facet_grid(. ~ second_check) +
+  geom_boxplot()
+```
+
+```{r, echo=FALSE, results="hide", fig.keep="all", message=FALSE, warnings=FALSE, results="hide", fig.keep="all"}
+ggplot(df_weekly, aes(x = as.character(third_check), y = spend_all)) +
+  geom_point() +
+  facet_grid(. ~ third_check) +
+  geom_boxplot()
+```
+
+```{r, echo=FALSE, results="hide", fig.keep="all", message=FALSE, warnings=FALSE, results="hide", fig.keep="all"}
+ggplot(df_weekly, aes(x = emp, y = spend_all)) +
+  geom_point() +
+  geom_smooth(method=lm)
+```
+
+```{r, echo=FALSE, results="hide", fig.keep="all", message=FALSE, warnings=FALSE, results="hide", fig.keep="all"}
+ggplot(df_weekly, aes(x = gps_retail_and_recreation, y = spend_all)) +
+  geom_point() +
+  geom_smooth(method=lm)
+```
+
 
 
 # Summarize the Model
 
-## It's really bad, to be blunt.
+## It's not great, to be blunt.
 
 ## Possible Better Models
 - Neural Networks
@@ -231,6 +262,14 @@ ggplot(df_weekly, aes(x = date, y = spend_all)) +
 
 # Conclusion
 
-Stimulus checks seem to encourage consumer spending, unsurprisingly.  *Assuming* that high consumer spending attributes to a healthier economy, we can conclude that stimulus checks will encourage more new job openings that offer higher wages.
+Stimulus checks -> Higher Consumer Spending
+
+### Therefore,
+
+**IF** Higher Consumer Spending -> Healthier Economy *(needs separate analysis)*
+
+**THEN** Stimulus Checks -> More Jobs and Better Jobs
+
+
 
 
