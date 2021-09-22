@@ -29,7 +29,7 @@ An in-depth paragraph about your project and overview of use.
 Contributors names and contact info
 
 1. Ujas Shah (ujaasshah97@gmail.com)
-2. Aaron Davis (aadavi2048@gmail.com)
+2. Aaron Davis (adavi2048@gmail.com)
 3. Swapnil Sethi (swapnilsth6@gmail.com)
 4. Navya Sonti (navyasonti@gmail.com)
 5. Rujula Nadipi (rujulanadipi@gmail.com)
