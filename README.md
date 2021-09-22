@@ -10,28 +10,19 @@ An in-depth paragraph about your project and overview of use.
 
 ### Dependencies
 
-* Describe any prerequisites, libraries, OS version, etc., needed before installing program.
-* ex. Windows 10
+* library("tidyverse")
+* library("lubridate")
+* R-Studio
 
 ### Installing
 
-* How/where to download your program
-* Any modifications needed to be made to files/folders
+* Clone the repository to your PC
+* Open DTSC_5301_Project.RMD in R-Studio
+
 
 ### Executing program
 
-* How to run the program
-* Step-by-step bullets
-```
-code blocks for commands
-```
-
-## Help
-
-Any advise for common problems or issues.
-```
-command to run if program contains helper info
-```
+* Knit file to PDF in R-Studio to view results
 
 ## Authors
 
