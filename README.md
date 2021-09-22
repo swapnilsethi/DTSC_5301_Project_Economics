@@ -4,7 +4,7 @@ Simple overview of use/purpose.
 
 ## Description
 
-An in-depth paragraph about your project and overview of use.
+In this project, we explore the relationships between stimulus checks and overall consumer spending.  We also explore the relationship between unemployment checks and unemployment levels of low-income households.  This entire analysis is done on data collected during the COVID-19 pandemic.
 
 ## Getting Started
 
