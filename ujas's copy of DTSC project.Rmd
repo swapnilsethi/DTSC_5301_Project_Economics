@@ -67,31 +67,144 @@ ujas_regression1 <- ujas_regression1 %>% unite("date", day:month:year, remove = 
 ujas_regression1$date <- dmy(ujas_regression1$date)
 
 
-ujas_regression_1 <- ujas_regression1 %>% mutate(
-  stimulus checks = (if (date < ymd("2020-04-14")) {
-    0
-  } else if (date<ymd("2020-05-01")) { 
-    1200
-  } else if (date< ymd("2021-01-03")) {
-    0
-  } else if (date < ymd("2021-01-19")) {
-    600
-  } else if (date < ymd())
-  second_check = (if (date < ymd("2021-01-04")) {
-    0
-  } else {
-    1
-  }),
-  third_check = (if (date < ymd("2021-03-18")) {
-    0
-  } else {
-    1
-  })
-)
 
 
-ujas_df1<- left_join(affinity_daily_df)
+if (("2018-04-10") < ymd("2019-04-14")) {
+  print(1)
+  } else {
+  print(0)
+  }
+
+d
+
 ```
+
+
+```{r}
+ujas_regression1 <- ujas_regression1 %>% mutate(
+  stimulus_checks = ifelse (date < ymd("2020-04-15"), 0,
+                            ifelse (date < ymd("2020-05-01"), 1200,
+                                    ifelse (date < ymd("2021-01-04"),0,
+                                            ifelse (date < ymd("2021-01-19"),600,
+                                                    ifelse (date < ymd("2021-03-17"),0,
+                                                            ifelse (date < ymd("2021-04-01"),1400, 0)))))))
+```
+
+```{r}
+actual_regression1 <- lm(spend_all ~ gps_retail_and_recreation + emp + stimulus_checks, ujas_regression1)
+
+summary(actual_regression1)
+```
+
+```{r}
+ujas_regression1a<- ujas_regression1
+
+#replace(ujas_regression1a$spend_all,".", "NA")
+
+ujas_regression1a$spend_all <- ifelse(ujas_regression1a$spend_all == ".", NA, ujas_regression1a$spend_all) 
+ujas_regression1a$spend_all <- as.double(ujas_regression1a$spend_all)
+
+ujas_regression1a$emp <- ifelse(ujas_regression1a$emp == ".", NA, ujas_regression1a$emp) 
+ujas_regression1a$emp <- as.double(ujas_regression1a$emp)
+
+#ujas_regression1a$spend_all <- 
+
+glimpse(ujas_regression1a)
+
+actual_regression1a <- lm(spend_all ~ gps_retail_and_recreation + emp + stimulus_checks, ujas_regression1a)
+
+summary(actual_regression1a)
+```
+
+
+```{r}
+#second regression
+ujas_retail_gps <- move_daily_df %>% select(year, month, day, statefips, gps_retail_and_recreation)
+
+
+
+ujas_retail_gps <- ujas_retail_gps %>% unite("date", day:month:year, remove = FALSE, sep="-") 
+
+ujas_retail_gps$date = dmy(ujas_retail_gps$date)
+ujas_retail_gps <- mutate(ujas_retail_gps,week =isoweek(date))
+
+ujas_retail_gps_weekly <-  ujas_retail_gps %>% group_by(year, week, statefips) %>% summarise(gps_retail_and_recreation = mean(gps_retail_and_recreation), date =max(date))
+
+ujas_contcombined <-  ui_claims_weekly_df %>% select(year, month, day_endofweek, statefips, contclaims_rate_combined) 
+
+ujas_contcombined <- ujas_contcombined %>% unite("date", day_endofweek:month:year, remove = FALSE, sep="-") 
+ujas_contcombined$date <- dmy(ujas_contcombined$date)
+glimpse(ujas_contcombined)
+
+ujas_bg_post <-  job_listings_weekly_df %>% select(year, month, day_endofweek, statefips, bg_posts)
+ujas_bg_post <- ujas_bg_post %>% unite("date", day_endofweek:month:year, remove = FALSE, sep="-") 
+
+ujas_bg_post$date <- dmy(ujas_bg_post$date)
+ujas_bg_post$date <- ujas_bg_post$date+1
+ujas_bg_post$day_endofweek <- ujas_bg_post$day_endofweek+1
+glimpse(ujas_bg_post)
+ujas_regression2 <- left_join(ujas_contcombined, ujas_bg_post, by =c("date","statefips", "month","year","day_endofweek")) 
+ujas_regression2 <- left_join(ujas_regression2,ujas_retail_gps, by =c("date","statefips", "month","year"))
+view(state_id)
+ujas_regression2 <- left_join(ujas_regression2,state_id, by =c ("statefips"))
+
+view(ujas_regression2)
+
+try=c()
+
+states_who_stopped_early_benefits <-  c("Arizona","Indiana","Maryland",
+"Tennessee","Alaska","Iowa","Mississippi","Missouri","Alabama","Idaho","Nebraska","New Hampshire","North Dakota","West Virginia", "Wyoming","Arkansas","Florida","Georgia","Ohio","Oklahoma","South Carolina","South Dakota","Texas","Utah","Montana")
+ujas_regression2 <- ujas_regression2 %>% mutate(
+  unemployment_checks = ifelse ((date >= ymd("2020-03-29") & date<= ymd("2020-07-31")), 600,
+                                ifelse ((date >= ymd("2020-07-26") & date<=ymd("2020-09-05")), 300,
+                                        ifelse ((date >= ymd("2020-12-26") & date<=ymd("2021-03-13")),300,
+                                                ifelse ((date >= ymd("2021-03-14") & date <= ymd("2021-06-21") & (statename %in% states_who_stopped_early_benefits)),300,
+                                                        ifelse((date >= ymd("2021-03-14") & date <= ymd("2021-09-04") & !(statename %in% states_who_stopped_early_benefits)),300, 0))))))
+
+ujas_regression2$contclaims_rate_combined <- ifelse(ujas_regression2$contclaims_rate_combined == ".", NA, ujas_regression2$contclaims_rate_combined) 
+ujas_regression2$contclaims_rate_combined <- as.double(ujas_regression2$contclaims_rate_combined)
+
+actual_regression2 <- lm(contclaims_rate_combined ~ bg_posts + gps_retail_and_recreation + unemployment_checks, ujas_regression2)
+summary(actual_regression2)
+
+glimpse(ujas_regression2)
+
+ujas_regression2 <- ujas_regression2 %>% select(-c(state_pop2019, stateabbrev, stimulus_checks))
+``` 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ```{r join_tibbles}
 df <- left_join(affinity_daily_df, move_daily_df, by = c("year", "month", "day", "statefips"))
