@@ -4,7 +4,7 @@ Simple overview of use/purpose.
 
 ## Description
 
-In this project, we explore the relationships between stimulus checks and overall consumer spending.  We also explore the relationship between unemployment checks and unemployment levels of low-income households.  This entire analysis is done on data collected during the COVID-19 pandemic.
+An in-depth paragraph about your project and overview of use.
 
 ## Getting Started
 
@@ -37,8 +37,11 @@ command to run if program contains helper info
 
 Contributors names and contact info
 
-ex. Dominique Pizzie  
-ex. [@DomPizzie](https://twitter.com/dompizzie)
+1. Ujas Shah (ujaasshah97@gmail.com)
+2. Aaron Davis (aadavi2048@gmail.com)
+3. Swapnil Sethi (swapnilsth6@gmail.com)
+4. Navya Sonti (navyasonti@gmail.com)
+5. Rujula Nadipi (rujulanadipi@gmail.com)
 
 ## Version History
 
