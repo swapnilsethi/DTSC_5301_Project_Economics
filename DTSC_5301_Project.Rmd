@@ -10,8 +10,12 @@ output:
   html_document: default
   word_document: default
 ---
-```{r, echo=FALSE}
+```{r setup, echo=FALSE}
 # Custom YAML header for pdf_document used to wrap code in knitted pdf with help from Dr. Wall
+
+library(knitr)
+opts_chunk$set(tidy.opts=list(width.cutoff=80),tidy=TRUE)
+```
 ```
 # Question of Interest
 We want to know whether or not the stimulus checks sent out by the US government have had a positive impact on the economy (using consumer spending as a proxy for how healthy the economy is).
