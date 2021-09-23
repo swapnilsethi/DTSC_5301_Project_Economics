@@ -17,13 +17,15 @@ library(knitr)
 opts_chunk$set(tidy.opts=list(width.cutoff=80),tidy=TRUE)
 ```
 
-# Question of Interest
-We want to know whether or not the stimulus checks sent out by the US government have had a positive impact on the economy (using consumer spending as a proxy for how healthy the economy is).
+# Questions of Interest
+1.We want to know whether or not the stimulus checks sent out by the US government have had a positive impact on the economy (using consumer spending as a proxy for how healthy the economy is).
+2.We also want to know if unemployment checks sent out by US government effects the unemployment levels. 
+
+Unemployment checks protects workers incomes after layoffs, improving their long-run labor market productivity, and stimulating the economy during recessions. But, giving out unemployment checks in large nummber can also discourage job searching.
 
 # Why Should **YOU** Care How Healthy the US Economy Is?
 
 Why should we care about consumer spending?  It seems like a big picture idea that won't really effect any of us specifically, right?  Wrong.  When the economy is healthy, there are more jobs available.  Those jobs also pay more.  As graduate students, we all want to get good paying jobs as Data Scientists, and that will be more likely to happen more quickly if the economy is healthy.
-
 
 This analysis will help us understand how stimulus checks effect the US economy, and therefore, indirectly, the analysis will also help us understand whether or not stimulus checks will help us get good-paying jobs quickly after graduation.
 
@@ -36,7 +38,6 @@ All of our data was aggregated by Opportunity Insights at https://github.com/Opp
 **Primary Reference:**
 
 "The Economic Impacts of COVID-19: Evidence from a New Public Database Built Using Private Sector Data", by Raj Chetty, John Friedman, Nathaniel Hendren, Michael Stepner, and the Opportunity Insights Team. November 2020. Available at: https://opportunityinsights.org/wp-content/uploads/2020/05/tracker_paper.pdf
-
 
 ```{r import_libraries, include=FALSE, tidy=TRUE}
 library(tidyverse)
@@ -171,11 +172,8 @@ regression2_df$contclaims_rate_combined <- as.double(regression2_df$contclaims_r
 ```
 
 
-### Training the First Linear Model on Our Data
+### Training the Second Linear Model on Our Data
 
-In this code chunk, we fit a linear model to the *gps_retail_and_recreation*, *emp*, and *stimulus_checks* features, with the goal of predicting the *spend_all* variable.  The working assumption here is that *spend_all* is a dependent variable, and the others are independent variables.
-
-The reason we chose these three input variables is that *stimulus_checks* are directly relevant to our analysis.  We are trying to identify if these features had a positive or negative effect on the economy. These two features, *gps_retail_and_recreation* and *emp*, were added to help account for change in spending that could not necessarily be accounted for by the *stimulus_checks*.  We chose not to include any other input features because we believe that *gps_retail_and_recreation* and *emp* account for much of the possible variance without over-complicating our linear model.
 
 ```{r}
 unemployment_regression <- lm(contclaims_rate_combined ~ bg_posts + visits_to_retail_and_recreation + unemployment_checks, regression2_df)
