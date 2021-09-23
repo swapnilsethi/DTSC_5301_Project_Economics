@@ -21,6 +21,8 @@ opts_chunk$set(tidy.opts=list(width.cutoff=80),tidy=TRUE)
 1.We want to know whether or not the stimulus checks sent out by the US government have had a positive impact on the economy (using consumer spending as a proxy for how healthy the economy is).
 2.We also want to know if unemployment checks sent out by US government effects the economy. 
 
+# Unemployment checks protects workers incomes after layoffs, improving their long-run labor market productivity, and stimulating the economy during recessions. But, giving out unemployment checks in large nummber can also discourage job searching.
+
 # Why Should **YOU** Care How Healthy the US Economy Is?
 
 Why should we care about consumer spending?  It seems like a big picture idea that won't really effect any of us specifically, right?  Wrong.  When the economy is healthy, there are more jobs available.  Those jobs also pay more.  As graduate students, we all want to get good paying jobs as Data Scientists, and that will be more likely to happen more quickly if the economy is healthy.
