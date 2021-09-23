@@ -17,8 +17,9 @@ library(knitr)
 opts_chunk$set(tidy.opts=list(width.cutoff=80),tidy=TRUE)
 ```
 ```
-# Question of Interest
-We want to know whether or not the stimulus checks sent out by the US government have had a positive impact on the economy (using consumer spending as a proxy for how healthy the economy is).
+# Questions of Interest
+1.We want to know whether or not the stimulus checks sent out by the US government have had a positive impact on the economy (using consumer spending as a proxy for how healthy the economy is).
+2.We also want to know if unemployment checks sent out by US government effects the economy. 
 
 # Why Should **YOU** Care How Healthy the US Economy Is?
 
