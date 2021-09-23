@@ -1,0 +1,340 @@
+---
+title: "Stimulus Checks and Consumer Spending"
+author: "Aaron Davis, Navya Sonti, Rujula Nadipi, Swapnil Sethi, and Ujas Shah"
+date: "9/2/2021"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+# Question of Interest
+We want to know whether or not the stimulus checks sent out by the US government have had a positive impact on the economy (using consumer spending as a proxy for how healthy the economy is).
+
+# Why Should **YOU** Care How Healthy the US Economy Is?
+
+Why should we care about consumer spending?  It seems like a big picture idea that won't really effect any of us specifically, right?  Wrong.  When the economy is healthy, there are more jobs available.  Those jobs also pay more.  As graduate students, we all want to get good paying jobs as Data Scientists, and that will be more likely to happen more quickly if the economy is healthy.
+
+
+This analysis will help us understand how stimulus checks effect the US economy, and therefore, indirectly, the analysis will also help us understand whether or not stimulus checks will help us get good-paying jobs quickly after graduation.
+
+There is also a long-standing debate between the liberal and conservative political ideologies in the US over whether or not the increase in consumer spending caused by stimulus checks is actually worth the debt incurred by the government when sending out the checks.  While this analysis doesn't cover that, this would be an interesting topic for future research using this dataset.
+
+# Data Source
+
+All of our data was aggregated by Opportunity Insights at https://github.com/OpportunityInsights/EconomicTracker.  In this analysis, we use spending data provided by Affinity Solutions, job postings data from Burning Glass Technologies, COVID data from the CDC, GPS mobility reports from Google, unemployment claims from the Department of Labor, and employment levels from Paychex, Intuit, Earnin and Kronos.
+
+**Primary Reference:**
+
+"The Economic Impacts of COVID-19: Evidence from a New Public Database Built Using Private Sector Data", by Raj Chetty, John Friedman, Nathaniel Hendren, Michael Stepner, and the Opportunity Insights Team. November 2020. Available at: https://opportunityinsights.org/wp-content/uploads/2020/05/tracker_paper.pdf
+
+
+```{r setup, include=FALSE, tidy=TRUE}
+library(tidyverse)
+library(lubridate)
+```
+
+## Read in Data from GitHub Repository
+```{r get_data, cache = TRUE, message = FALSE}
+
+covid_daily_df <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/COVID%20-%20State%20-%20Daily.csv")
+
+move_daily_df <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/Google%20Mobility%20-%20State%20-%20Daily.csv")
+
+affinity_daily_df <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/Affinity%20-%20State%20-%20Daily.csv")
+
+job_listings_weekly_df <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/Burning%20Glass%20-%20State%20-%20Weekly.csv")
+
+employment_daily_df <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/Employment%20-%20State%20-%20Daily.csv")
+
+ui_claims_weekly_df <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/UI%20Claims%20-%20State%20-%20Weekly.csv")
+
+state_id <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/EconomicTracker/main/data/GeoIDs%20-%20State.csv")
+```
+
+### Data Selection and Cleaning
+
+In this code chunk, we select the columns that we're interested in from the dataframe that we joined a couple of steps ago.  We could use all of the data in the dataframe, but we choose not to, since not all of the features will be helpful in answering the question of whether or not the stimulus checks have boosted the economy.  We also combined "month", "day", and "year" columns into a "date" column.
+
+```{r, echo=FALSE, message=FALSE, warnings=FALSE}
+consumer_spending <- affinity_daily_df %>% select(year, month, day, statefips, spend_all)
+visits_to_retail <- move_daily_df %>% select(year, month, day, statefips, gps_retail_and_recreation)
+employment <- employment_daily_df %>% select(year, month, day, statefips, emp)
+
+```
+
+## Join the datasets we're interested in into one dataset.
+
+Here we join the datasets of interest based on a shared date and state of measurements.  We are joining weekly datasets (job listings and unemployment insurance claims) with the daily datasets.  This will leave a bunch of **NA** values.  We'll come back to fix that later.
+
+```{r}
+regression1_df <- left_join(consumer_spending, visits_to_retail, by = c("year", "month", "day", "statefips"))
+regression1_df <- left_join(regression1_df, employment, by =c("year", "month", "day", "statefips"))
+```
+
+### Adding Stimulus Check Data
+
+Here we add in the data for the COVID stimulus checks.  We do this by creating a feature encoding for each check, where the value for that check is **0** before the check is sent out, then $1200 for two weeks after the first check, then zero, then $600 for two weeks after the second check, then zero, then $1400 for two weeks after the third check, and then zero.
+
+```{r}
+regression1_df <- regression1_df %>% unite("date", day:month:year, remove = FALSE, sep = "-")
+regression1_df$date <- dmy(regression1_df$date)
+
+regression1_df<- regression1_df%>% mutate(
+  stimulus_checks = ifelse (date < ymd("2020-04-15"), 0,
+                            ifelse (date < ymd("2020-05-01"), 1200,
+                                    ifelse (date < ymd("2021-01-04"),0,
+                                            ifelse (date < ymd("2021-01-19"),600,
+                                                    ifelse (date < ymd("2021-03-17"),0,
+                                                            ifelse (date < ymd("2021-04-01"),1400, 0)))))))
+```
+
+To fix the **NA** values found in our dataset, we replace them all with **0**.  We could have handled them many other ways, like replacing them with the column mean, median, mode, or by training a regression model to fill them based on the rows that were not missing those values.  For this dataset, though, we found that **NA**s are frequently used when the there was no interesting data to report (in other words, the value for the feature was zero).  This can be seen particularly in columns like new_death_count and new_case_count from the CDC COVID dataset.
+
+We also drop rows that have 0 spending data because this value is not realistic.  Also, we need the spend_all column to be clean because we will be using it for plotting and training a regression model later on.
+
+```{r fist regression}
+regression1_df$spend_all <- ifelse(regression1_df$spend_all == ".", NA, regression1_df$spend_all) 
+regression1_df$spend_all <- as.double(regression1_df$spend_all)
+
+regression1_df$emp <- ifelse(regression1_df$emp == ".", NA, regression1_df$emp) 
+regression1_df$emp <- as.double(regression1_df$emp)
+
+glimpse(regression1_df)
+```
+
+
+### Training the First Linear Model on Our Data
+
+In this code chunk, we fit a linear model to the *gps_retail_and_recreation*, *emp*, and *stimulus_checks* features, with the goal of predicting the *spend_all* variable.  The working assumption here is that *spend_all* is a dependent variable, and the others are independent variables.
+
+The reason we chose these three input variables is that *stimulus_checks* are directly relevant to our analysis.  We are trying to identify if these features had a positive or negative effect on the economy. These two features, *gps_retail_and_recreation* and *emp*, were added to help account for change in spending that could not necessarily be accounted for by the *stimulus_checks*.  We chose not to include any other input features because we believe that *gps_retail_and_recreation* and *emp* account for much of the possible variance without over-complicating our linear model.
+
+```{r}
+spending_regression <- lm(spend_all ~ gps_retail_and_recreation + emp + stimulus_checks, regression1_df)
+
+summary(spending_regression)
+```
+
+```{r making the tibble for the second regression}
+
+visits_to_retail_weekly <- move_daily_df %>% select(year, month, day, statefips, gps_retail_and_recreation)
+visits_to_retail_weekly <- visits_to_retail_weekly %>% unite("date", day:month:year, remove = FALSE, sep="-") 
+visits_to_retail_weekly$date = dmy(visits_to_retail_weekly$date)
+visits_to_retail_weekly <- mutate(visits_to_retail_weekly,week =isoweek(date))
+visits_to_retail_weekly <-  visits_to_retail_weekly %>% group_by(year, week, statefips) %>% summarise(gps_retail_and_recreation = mean(gps_retail_and_recreation), date =max(date))
+
+unemployment_claims <-  ui_claims_weekly_df %>% select(year, month, day_endofweek, statefips, contclaims_rate_combined) 
+unemployment_claims <- unemployment_claims %>% unite("date", day_endofweek:month:year, remove = FALSE, sep="-") 
+unemployment_claims$date <- dmy(unemployment_claims$date)
+unemployment_claims$contclaims_rate_combined <- as.double(unemployment_claims$contclaims_rate_combined)
+glimpse(unemployment_claims)
+
+job_postings <-  job_listings_weekly_df %>% select(year, month, day_endofweek, statefips, bg_posts)
+job_postings <- job_postings %>% unite("date", day_endofweek:month:year, remove = FALSE, sep="-") 
+job_postings$date <- dmy(job_postings$date)
+job_postings$date <- job_postings$date+1
+job_postings$day_endofweek <- job_postings$day_endofweek+1
+glimpse(job_postings)
+
+regression2_df <- left_join(unemployment_claims, job_postings, by =c("date", "statefips", "month", "year", "day_endofweek")) 
+regression2_df <- regression2_df %>% mutate(week = isoweek(date))
+regression2_df <- left_join(regression2_df, visits_to_retail_weekly, by = c("week","statefips", "year"))
+regression2_df <- left_join(regression2_df, state_id, by = c("statefips"))
+regression2_df <- rename(regression2_df, c(visits_to_retail_and_recreation = "gps_retail_and_recreation", date = "date.x"))
+
+
+states_which_stopped_early_benefits <-  c("Arizona", "Indiana", "Maryland", "Tennessee", "Alaska", "Iowa", "Mississippi", "Missouri", "Alabama", "Idaho", "Nebraska", "New Hampshire", "North Dakota", "West Virginia", "Wyoming", "Arkansas", "Florida", "Georgia", "Ohio", "Oklahoma", "South Carolina", "South Dakota", "Texas", "Utah", "Montana")
+
+regression2_df <- regression2_df %>% mutate(unemployment_checks = ifelse ((date >= ymd("2020-03-29") & date<= ymd("2020-07-31")), 600,
+                                                                              ifelse ((date >= ymd("2020-07-26") & date<=ymd("2020-09-05")), 300,
+                                                                                      ifelse ((date >= ymd("2020-12-26") & date<=ymd("2021-03-13")), 300,
+                                                                                              ifelse ((date >= ymd("2021-03-14") & date <= ymd("2021-06-21") & (statename %in% states_which_stopped_early_benefits)),300,
+                                                                                                      ifelse((date >= ymd("2021-03-14") & date <= ymd("2021-09-04") & !(statename %in% states_which_stopped_early_benefits)), 300, 0))))))
+
+regression2_df$contclaims_rate_combined <- ifelse(regression2_df$contclaims_rate_combined == ".", NA, regression2_df$contclaims_rate_combined) 
+regression2_df$contclaims_rate_combined <- as.double(regression2_df$contclaims_rate_combined)
+```
+
+
+### Training the First Linear Model on Our Data
+
+In this code chunk, we fit a linear model to the *gps_retail_and_recreation*, *emp*, and *stimulus_checks* features, with the goal of predicting the *spend_all* variable.  The working assumption here is that *spend_all* is a dependent variable, and the others are independent variables.
+
+The reason we chose these three input variables is that *stimulus_checks* are directly relevant to our analysis.  We are trying to identify if these features had a positive or negative effect on the economy. These two features, *gps_retail_and_recreation* and *emp*, were added to help account for change in spending that could not necessarily be accounted for by the *stimulus_checks*.  We chose not to include any other input features because we believe that *gps_retail_and_recreation* and *emp* account for much of the possible variance without over-complicating our linear model.
+
+```{r}
+unemployment_regression <- lm(contclaims_rate_combined ~ bg_posts + visits_to_retail_and_recreation + unemployment_checks, regression2_df)
+summary(unemployment_regression)
+``` 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### Summarize the Models
+
+Based on the information displayed above, all of the variables we are regressing on are statistically significant for predicting the overall spending.
+
+Our model is fairly limited in how accurately it predicts overall consumer spending because it is a linear model, and because we've limited ourselves to regressing on five variables for the sake of model simplicity, rather than the 30+ that we could've regressed on.  
+
+Future analysis could be done using neural networks, gradient boosted decision trees, or recurrent neural networks.  We believe that all of these would be able to learn the nuances of our dataset better than a linear model could.
+
+
+### Plotting spending over time for all states and categories
+
+The dates for the stimulus checks were approximated from [this article](https://en.as.com/en/2021/08/25/latest_news/1629920433_478504.html).  
+
+# ```{r plot_spend_smooth, cache = TRUE}
+# 
+# # https://stackoverflow.com/questions/38815996/r-adding-geom-vline-labels-to-geom-histogram-labels
+# 
+# ggplot(df_weekly, aes(x = date, y = spend_all)) +
+#   geom_smooth() +
+#   geom_vline(xintercept = as.Date("2020-04-12")) +
+#   geom_vline(xintercept = as.Date("2021-01-01")) +
+#   geom_vline(xintercept = as.Date("2021-03-01")) +
+#   geom_text(aes(x = as.Date("2020-05-28"), label = "1st Check"),
+#     color = "red", angle = 45, y = 0
+#   ) +
+#   geom_text(aes(x = as.Date("2020-11-05"), label = "2nd Check"),
+#     color = "dark green", angle = 45, y = -.1
+#   ) +
+#   geom_text(aes(x = as.Date("2021-04-25"), label = "3rd Check"),
+#     color = "blue",
+#     angle = 45, y = -.1
+#   ) +
+#   labs(
+#     title = "What We Wished Our Data Looked Like",
+#     subtitle = "Spending Over Time (Compared to Pre-Pandemic Baseline)"
+#   )
+# ```
+# 
+# ```{r plot_spend_all, cache = TRUE}
+# 
+# # https://stackoverflow.com/questions/38815996/r-adding-geom-vline-labels-to-geom-histogram-labels
+# 
+# ggplot(df, aes(x = date, y = spend_all)) +
+#   geom_point() +
+#   geom_smooth() +
+#   geom_vline(xintercept = as.Date("2020-04-12")) +
+#   geom_vline(xintercept = as.Date("2021-01-01")) +
+#   geom_vline(xintercept = as.Date("2021-03-01")) +
+#   geom_text(aes(x = as.Date("2020-05-28"), label = "1st Check"), color = "red", angle = 45, y = 0) +
+#   geom_text(aes(x = as.Date("2020-11-05"), label = "2nd Check"), color = "dark green", angle = 45, y = -.1) +
+#   geom_text(aes(x = as.Date("2021-04-25"), label = "3rd Check"), color = "blue", angle = 45, y = -.1) +
+#   labs(title = "What Our Data Looks Like", subtitle = "Spending Over Time (Compared to Pre-Pandemic Baseline)")
+# ```
+# 
+# ```{r}
+# ggplot(df, aes(x = gps_retail_and_recreation, y = spend_all, color = stateabbrev)) +
+#   geom_point()
+# ```
+# 
+# 
+# 
+# 
+# 
+# ```{r}
+# actual_regression1a <- lm(spend_all ~ gps_retail_and_recreation + emp + stimulus_checks, ujas_regression1a)
+# 
+# summary(actual_regression1a)
+# ```
+# 
+# ### Combining Weekly and Daily Data for Unemployment Regression
+# 
+# In this code chunk, we aggregate daily data into weekly data.  
+# 
+# We also add in additional data about the states, at this point (like state name, abbreviation, and population).
+# 
+# ```{r}
+# #second regression
+# ujas_retail_gps <- move_daily_df %>% select(year, month, day, statefips, gps_retail_and_recreation)
+# 
+# ujas_retail_gps <- ujas_retail_gps %>% unite("date", day:month:year, remove = FALSE, sep="-") 
+# 
+# ujas_retail_gps$date = dmy(ujas_retail_gps$date)
+# ujas_retail_gps <- mutate(ujas_retail_gps,week =isoweek(date))
+# 
+# ujas_retail_gps_weekly <-  ujas_retail_gps %>% group_by(year, week, statefips) %>% summarise(gps_retail_and_recreation = mean(gps_retail_and_recreation), date =max(date))
+# 
+# ujas_contcombined <-  ui_claims_weekly_df %>% select(year, month, day_endofweek, statefips, contclaims_rate_combined) 
+# 
+# ujas_contcombined <- ujas_contcombined %>% unite("date", day_endofweek:month:year, remove = FALSE, sep="-") 
+# ujas_contcombined$date <- dmy(ujas_contcombined$date)
+# glimpse(ujas_contcombined)
+# 
+# ujas_bg_post <-  job_listings_weekly_df %>% select(year, month, day_endofweek, statefips, bg_posts)
+# ujas_bg_post <- ujas_bg_post %>% unite("date", day_endofweek:month:year, remove = FALSE, sep="-") 
+# 
+# ujas_bg_post$date <- dmy(ujas_bg_post$date)
+# ujas_bg_post$date <- ujas_bg_post$date+1
+# ujas_bg_post$day_endofweek <- ujas_bg_post$day_endofweek+1
+# glimpse(ujas_bg_post)
+# ujas_regression2 <- left_join(ujas_contcombined, ujas_bg_post, by =c("date","statefips", "month","year","day_endofweek")) 
+# ujas_regression2 <- left_join(ujas_regression2,ujas_retail_gps, by =c("date","statefips", "month","year"))
+# view(state_id)
+# ujas_regression2 <- left_join(ujas_regression2,state_id, by =c ("statefips"))
+# 
+# view(ujas_regression2)
+# 
+# try=c()
+# 
+# states_who_stopped_early_benefits <-  c("Arizona","Indiana","Maryland",
+# "Tennessee","Alaska","Iowa","Mississippi","Missouri","Alabama","Idaho","Nebraska","New Hampshire","North Dakota","West Virginia", "Wyoming","Arkansas","Florida","Georgia","Ohio","Oklahoma","South Carolina","South Dakota","Texas","Utah","Montana")
+# 
+# ujas_regression2 <- ujas_regression2 %>% mutate(
+#   unemployment_checks = ifelse ((date >= ymd("2020-03-29") & date<= ymd("2020-07-31")), 600,
+#                                 ifelse ((date >= ymd("2020-07-26") & date<=ymd("2020-09-05")), 300,
+#                                         ifelse ((date >= ymd("2020-12-26") & date<=ymd("2021-03-13")),300,
+#                                                 ifelse ((date >= ymd("2021-03-14") & date <= ymd("2021-06-21") & (statename %in% states_who_stopped_early_benefits)),300,
+#                                                         ifelse((date >= ymd("2021-03-14") & date <= ymd("2021-09-04") & !(statename %in% states_who_stopped_early_benefits)),300, 0))))))
+# 
+# ujas_regression2$contclaims_rate_combined <- ifelse(ujas_regression2$contclaims_rate_combined == ".", NA, ujas_regression2$contclaims_rate_combined) 
+# ujas_regression2$contclaims_rate_combined <- as.double(ujas_regression2$contclaims_rate_combined)
+# 
+# actual_regression2 <- lm(contclaims_rate_combined ~ bg_posts + gps_retail_and_recreation + unemployment_checks, ujas_regression2)
+# summary(actual_regression2)
+# 
+# glimpse(ujas_regression2)
+# 
+# ujas_regression2 <- ujas_regression2 %>% select(-c(state_pop2019, stateabbrev, stimulus_checks))
+# ``` 
+
+### Summarize Our Biases
+
+We were expecting to find that the stimulus checks all had a positive impact on consumer spending, because this is the only outcome that makes any economic sense, as far as we can tell.  This effected how we encoded our stimulus check data into feature variables, and it effected how accurate we thought any given model was.  If a model said that a stimulus check caused a decrease in consumer spending, we considered that model to be almost certainly highly inaccurate.
+
+### Summarize Biases in the Data
+
+Our data contains several potential biases that could skew our results.  For example, we use movement data from Google.  This data was likely pulled from android phones, not Apple products.  Imagine, then, that more affluent people tend to purchase Apple products.  If this is true, our movement data will be skewed away from affluent people who may be more likely to spend more, more casually.
+
+
+# Conclusion
+
+## Result Summary
+
+The coefficients of our linear model seem to indicate that, unsurprisingly, giving out stimulus checks is correlated with an increase in overall consumer spending.
+
+#
+
+Therefore, *if* high consumer spending is correlated with a healthier economy, then it seems reasonable to conclude that giving out stimulus checks is also good for the economy, and if they are good for the economy, they are also good for our chances of getting jobs that pay well post-graduation.
+
+#
+
+The "if" at the beginning of the previous sentence is a big one, though.  If the government has to go further into debt to send out stimulus checks, then is the net effect of stimulus checks really good for the economy?  We don't know, and this analysis has not considered the effect of increased government debt on the economy.  This would be an interesting topic for future analysis.
+
+
+
+

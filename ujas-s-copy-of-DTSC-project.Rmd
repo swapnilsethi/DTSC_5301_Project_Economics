@@ -57,28 +57,29 @@ state_id <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/Econ
 ## Join the datasets we're interested in into one dataset.
 
 Here we join the datasets of interest based on a shared date and state of measurements.  We are joining weekly datasets (job listings and unemployment insurance claims) with the daily datasets.  This will leave a bunch of **NA** values.  We'll come back to fix that later.
+
 ```{r}
 ujas_spend_all <- affinity_daily_df %>% select(year, month, day, statefips, spend_all)
 ujas_retail_gps <- move_daily_df %>% select(year, month, day, statefips, gps_retail_and_recreation)
 ujas_emp <- employment_daily_df %>% select(year, month, day, statefips, emp)
+
+```
+
+### Data Selection and Cleaning
+
+In this code chunk, we select the columns that we're interested in from the dataframe that we joined a couple of steps ago.  We could use all of the data in the dataframe, but we choose not to, since not all of the features will be helpful in answering the question of whether or not the stimulus checks have boosted the economy.  We also combined "month", "day", and "year" columns into a "date" column.
+
+
+```{r}
 ujas_regression1<- left_join(ujas_spend_all, ujas_retail_gps, by = c("year", "month", "day", "statefips"))
 ujas_regression1 <- left_join(ujas_regression1, ujas_emp, by =c("year", "month", "day", "statefips"))
 ujas_regression1 <- ujas_regression1 %>% unite("date", day:month:year, remove = FALSE, sep = "-")
 ujas_regression1$date <- dmy(ujas_regression1$date)
-
-
-
-
-if (("2018-04-10") < ymd("2019-04-14")) {
-  print(1)
-  } else {
-  print(0)
-  }
-
-d
-
 ```
 
+### Adding Stimulus Check Data
+
+Here we add in the data for the COVID stimulus checks.  We do this by creating a feature encoding for each check, where the value for that check is **0** before the check is sent out, then $1200 for two weeks after the first check, then zero, then $600 for two weeks after the second check, then zero, then $1400 for two weeks after the third check, and then zero.
 
 ```{r}
 ujas_regression1 <- ujas_regression1 %>% mutate(
@@ -89,6 +90,8 @@ ujas_regression1 <- ujas_regression1 %>% mutate(
                                                     ifelse (date < ymd("2021-03-17"),0,
                                                             ifelse (date < ymd("2021-04-01"),1400, 0)))))))
 ```
+
+
 
 ```{r}
 actual_regression1 <- lm(spend_all ~ gps_retail_and_recreation + emp + stimulus_checks, ujas_regression1)
@@ -220,7 +223,7 @@ df <- full_join(df, ui_claims_weekly_df, by = c("year", "month", "day" = "day_en
 df <- left_join(df, state_id, by = c("statefips"))
 ```
 
-### Combine "month", "day", and "year" columns into a "date" column
+
 ```{r clean_dates}
 # https://tidyr.tidyverse.org/reference/unite.html
 df <- df %>% unite("date", day:month:year, remove = FALSE, sep = "-")
@@ -231,9 +234,6 @@ df$date <- dmy(df$date)
 df <- df %>% mutate(week = week(date))
 ```
 
-### Data Selection and Cleaning
-
-In this code chunk, we select the columns that we're interested in from the dataframe that we joined a couple of steps ago.  We could use all of the data in the dataframe, but we choose not to, since not all of the features will be helpful in answering the question of whether or not the stimulus checks have boosted the economy.
 
 ```{r condense_data, warning = FALSE}
 
@@ -287,9 +287,7 @@ df_weekly <- left_join(df_weekly, state_id, by = c("stateabbrev"))
 
 ```
 
-### Adding Stimulus Check Data
 
-Here we add in the data for the COVID stimulus checks.  We do this by creating a feature encoding for each check, where the value for that check is **0** before the check is sent out, and **1** after the check is sent out.  This process created three new features, which we creatively named *first_check*, *second_check*, and *third_check*
 
 ```{r add_stimulus_checks, warning = FALSE}
 
