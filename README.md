@@ -1,6 +1,6 @@
 # Economic Tracker
 
-Simple overview of use/purpose.
+
 
 ## Description
 
@@ -26,10 +26,8 @@ An in-depth paragraph about your project and overview of use.
 
 ## Authors
 
-Contributors names and contact info
-
 1. Ujas Shah (ujaasshah97@gmail.com)
-2. Aaron Davis (adavi2048@gmail.com)
+2. Aaron Davis (aadavi2048@gmail.com)
 3. Swapnil Sethi (swapnilsth6@gmail.com)
 4. Navya Sonti (navyasonti@gmail.com)
 5. Rujula Nadipi (rujulanadipi@gmail.com)
@@ -48,9 +46,15 @@ This project is licensed under the [NAME HERE] License - see the LICENSE.md file
 
 ## Acknowledgments
 
-Inspiration, code snippets, etc.
-* [awesome-readme](https://github.com/matiassingers/awesome-readme)
-* [PurpleBooth](https://gist.github.com/PurpleBooth/109311bb0361f32d87a2)
-* [dbader](https://github.com/dbader/readme-template)
-* [zenorocha](https://gist.github.com/zenorocha/4526327)
-* [fvcproductions](https://gist.github.com/fvcproductions/1bfc2d4aecb01a834b46)
+* [Oppurtunity Insights] (https://github.com/OpportunityInsights/EconomicTracker)
+* [Consumer spending data/ Affinity Solutions] (https://www.affinity.solutions/)
+*                                              (https://github.com/OpportunityInsights/EconomicTracker/blob/main/docs/oi_tracker_data_dictionary.src.md#affinity)
+* [Job postings data/ Burning glass Technologies]  (https://www.burning-glass.com/)        
+*                                                  (https://github.com/OpportunityInsights/EconomicTracker/blob/main/docs/oi_tracker_data_dictionary.src.md#burning-glass)
+* [Mobility data/ Google]  (https://www.google.com/covid19/mobility/)
+*                          (https://github.com/OpportunityInsights/EconomicTracker/blob/main/docs/oi_tracker_data_dictionary.src.md#google-mobility)
+* [Employment data/ Paychex] (https://www.paychex.com/)
+* [Employment data/ Intuit]  (https://www.intuit.com/)
+* [Employment data/ Earnin]  (https://www.earnin.com/)
+* [Employment data/ Kronos]  (https://www.kronos.com/)
+*                            (https://github.com/OpportunityInsights/EconomicTracker/blob/main/docs/oi_tracker_data_dictionary.src.md#employment)
