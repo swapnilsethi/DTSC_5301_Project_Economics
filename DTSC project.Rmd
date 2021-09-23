@@ -57,8 +57,6 @@ sessionInfo()
 
 2.We also want to know if unemployment checks sent out by US government effects the unemployment levels. 
 
-Unemployment checks protects workers incomes after layoffs, improving their long-run labor market productivity, and stimulating the economy during recessions. But, giving out unemployment checks in large nummber can also discourage job searching.
-
 # Why Should **YOU** Care How Healthy the US Economy Is?
 
 Why should we care about consumer spending?  It seems like a big picture idea that won't really effect any of us specifically, right?  Wrong.  When the economy is healthy, there are more jobs available.  Those jobs also pay more.  As graduate students, we all want to get good paying jobs as Data Scientists, and that will be more likely to happen more quickly if the economy is healthy.
@@ -66,8 +64,6 @@ Why should we care about consumer spending?  It seems like a big picture idea th
 This analysis will help us understand how stimulus checks effect the US economy, and therefore, indirectly, the analysis will also help us understand whether or not stimulus checks will help us get good-paying jobs quickly after graduation.
 
 There is also a long-standing debate between the liberal and conservative political ideologies in the US over whether or not the increase in consumer spending caused by stimulus checks is actually worth the debt incurred by the government when sending out the checks.  While this analysis doesn't cover that, this would be an interesting topic for future research using this dataset.  
-
-\newpage 
 
 # Data Sources
 
