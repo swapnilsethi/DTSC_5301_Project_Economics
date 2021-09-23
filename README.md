@@ -1,12 +1,10 @@
 # Economic Tracker
 
+## Question of Interest
 
+1.We want to know whether or not the stimulus checks sent out by the US government have had a positive impact on the economy (using consumer spending as a proxy for how healthy the economy is).
 
-## Description
-
-An in-depth paragraph about your project and overview of use.
-
-## Getting Started
+2.We also want to know if unemployment checks sent out by US government effects the unemployment levels. 
 
 ### Dependencies
 
@@ -14,35 +12,17 @@ An in-depth paragraph about your project and overview of use.
 * library("lubridate")
 * R-Studio
 
-### Installing
-
-* Clone the repository to your PC
-* Open DTSC_5301_Project.RMD in R-Studio
-
-
 ### Executing program
 
 * Knit file to PDF in R-Studio to view results
 
 ## Authors
 
-1. Ujas Shah (ujaasshah97@gmail.com)
-2. Aaron Davis (aadavi2048@gmail.com)
-3. Swapnil Sethi (swapnilsth6@gmail.com)
-4. Navya Sonti (navyasonti@gmail.com)
-5. Rujula Nadipi (rujulanadipi@gmail.com)
-
-## Version History
-
-* 0.2
-    * Various bug fixes and optimizations
-    * See [commit change]() or See [release history]()
-* 0.1
-    * Initial Release
-
-## License
-
-This project is licensed under the [NAME HERE] License - see the LICENSE.md file for details
+1. Ujas Shah 
+2. Aaron Davis 
+3. Swapnil Sethi 
+4. Navya Sonti 
+5. Rujula Nadipi
 
 ## Acknowledgments
 
