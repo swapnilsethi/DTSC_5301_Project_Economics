@@ -48,7 +48,7 @@ This project is licensed under the [NAME HERE] License - see the LICENSE.md file
 
 * [Oppurtunity Insights](https://github.com/OpportunityInsights/EconomicTracker)
 * [Consumer spending data/ Affinity Solutions](https://www.affinity.solutions/) 
-* [Affinity So;utions Github](https://github.com/OpportunityInsights/EconomicTracker/blob/main/docs/oi_tracker_data_dictionary.src.md#affinity)
+* [Affinity Solutions Github](https://github.com/OpportunityInsights/EconomicTracker/blob/main/docs/oi_tracker_data_dictionary.src.md#affinity)
 * [Job postings data/ Burning glass Technologies](https://www.burning-glass.com/)        
 * [Burning glass Technologies Gthub](https://github.com/OpportunityInsights/EconomicTracker/blob/main/docs/oi_tracker_data_dictionary.src.md#burning-glass)
 * [Mobility data/ Google](https://www.google.com/covid19/mobility/)
