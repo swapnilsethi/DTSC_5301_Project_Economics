@@ -30,46 +30,45 @@ sessionInfo()
 
 1. [Motivation and questions of interest]  
 2. [Data sources and description]  
-4. [Reading-in the data]  
-5. [Data cleaning and transformation]  
+3. [Reading-in the data]  
+4. [Data cleaning and transformation]  
     1. [Data cleaning for visualizations]  
     2. [Data cleaning for the first regression model]  
     3. [Data cleaning for the second regression model]  
-6. [Visualization and analysis]  
+5. [Visualization and analysis]  
     1. [National spending over time]  
     2. [National spending over time (split by income)]  
     3. [National unemployment rate over time (split by income)]  
-7. [Spending Regression Model]  
-8. [Unemployment Regression Model]   
-9. [Biases]  
+6. [Spending Regression Model]  
+7. [Unemployment Regression Model]   
+8. [Biases]  
     1. [Model Biases]  
-    2. [Data Biases]  
-    
-10.[Conclusion]  
+    2. [Data Biases]   
+9. [Conclusion]  
 
 \newpage 
 
 # Motivation and questions of interest
 An economic crisis is among those times when a significant number of people are at their most vulnerable, owing to the sudden loss of financial security. In such a situation, the policies put in place by the government to support the economy, and their efficacy, becomes essential. In the past, owing to the time lag in conventional economic data reporting, quantitatively analyzing the efficacy of such policies would take a considerable amount of time. This would mean that the analysis could not help in changing or better tuning the policies during the crisis itself.
 
-However, this lack of data to analyse economic policies in near real-time has not been a constraint during the coronavirus crisis. In this project, we aim to analyse the effectiveness of some of the economic policies applied for the first time using the available data. More specifically, we are interested to answer the following two questions:
+However, this lack of data to analyze economic policies in near real-time has not been a constraint during the coronavirus crisis. In this project, we aim to analyze the effectiveness of some of the economic policies applied for the first time using the available data. More specifically, we are interested to answer the following two questions:
 
 1. Did the stimulus checks provided by the US government have a significant positive impact on consumer spending?
 
-2. Did the increase in unemployment compensation provided by the US government cause unemployment rate to be higher than it would have been otherwise?
+2. Did the increase in unemployment compensation provided by the US government cause the unemployment rate to be higher than it would have been otherwise?
 
 The second question is especially interesting as more than 20 states stopped providing enhanced unemployment benefits to citizens in June 2021 while the rest of the states continued to provide it until September. This created a natural experiment to test the effect of unemployment benefits on the unemployment rate.
 
 ### Why should **YOU** care how effective the government's economic response is?
 
-Why should we care about consumer spending?  It seems like a big picture idea that won't really effect any of us specifically, right? Wrong. Effective economic policies lead to a faster recovery and a healthier economy. When the economy is healthy, there are more jobs available. Those jobs also pay more. As graduate students, we all want to get good paying jobs as Data Scientists, and that will be more likely to happen more quickly if the economy is healthy.
+Why should we care about consumer spending?  It seems like a big picture idea that won't really affect any of us specifically, right? Wrong. Effective economic policies lead to a faster recovery and a healthier economy. When the economy is healthy, there are more jobs available. Those jobs also pay more. As graduate students, we all want to get good paying jobs as Data Scientists, and that will be more likely to happen more quickly if the economy is healthy.
 
-There is also a continued debate between the liberal and conservative political ideologies in the US over whether or not the increase in consumer spending caused by stimulus checks is actually worth the debt incurred by the government when sending out the checks. While this analysis doesn't cover that, this would be an interesting topic for future research using this dataset. Our analysis, however, will provide us some insight into the debate between political ideologies on if the enhanced unemploymnent benefits significantly effect businesses ability to hire employees.
+There is also a continuous debate between the liberal and conservative political ideologies in the US over whether or not the increase in consumer spending caused by stimulus checks is actually worth the debt incurred by the government when sending out the checks. While this analysis doesn't cover that, this would be an interesting topic for future research using this dataset. Our analysis, however, will provide us some insight into the debate between political ideologies on if the enhanced unemployment benefits significantly affect businesses' ability to hire employees.
 
 
 # Data sources and description
 
-Nearly all of the data we use comes from private firms which engage in particular economic areas, and all of this data has been aggregated by Opportunity Insights, which is an NGO at Harvard University. Consumer spending data in our analysis has been orignially sourced from Affinity Solutions, visits to retail and recreational establishments from Google, job postings data from Burning Glass, unemployment data from the US Department of Labour and employment data from Paychex, Intuit, Earnin and Kronos
+Nearly all of the data we use comes from private firms which engage in particular economic areas, and all of this data has been aggregated by Opportunity Insights, which is an NGO at Harvard University. Consumer spending data in our analysis has been originally sourced from Affinity Solutions, visits to retail and recreational establishments from Google, job postings data from Burning Glass, unemployment data from the US Department of Labour, and employment data from Paychex, Intuit, Earnin, and Kronos
 
 The data can be found at- https://github.com/OpportunityInsights/EconomicTracker
 
@@ -86,7 +85,7 @@ library(lubridate)
 
 # Reading-in the data 
 
-In this code chunk, we read the columns that we're interested in from the data sources. We could use all of the data in the data sources, but we choose not to, since not all of the features will be helpful in answering the questions we have.  
+In this code chunk, we read the columns that we're interested in from the data sources. We could use all of the data in the data sources, but we choose not to since not all of the features will be helpful in answering the questions we have.  
 
 ```{r get_data, cache = TRUE, warnings=FALSE, results="hide", fig.keep="all", message=FALSE}
 
@@ -112,7 +111,7 @@ state_id <- read_csv("https://raw.githubusercontent.com/OpportunityInsights/Econ
 
 # Data Cleaning and Transformation
 ### Data cleaning for visualizations
-First, let's prepare national level data for visualization. We need date column with "date" datatype for further analysis and visualization, so let's create one using year, month, and day columns.
+First, let's prepare national level data for visualization. We need a date column with "date" datatype for further analysis and visualization, so let's create one using year, month, and day columns.
 ```{r, cache = TRUE, warnings=FALSE, results="hide", fig.keep="all", message=FALSE}
 # https://tidyr.tidyverse.org/reference/unite.html
 affinity_national_df <- affinity_national_df %>% unite("date", day:month:year, remove = FALSE, sep = "-")
@@ -126,7 +125,7 @@ affinity_national_df <- affinity_national_df %>% mutate(date = dmy(affinity_nati
 employment_national_df <- employment_national_df %>% mutate(date = dmy(employment_national_df$date))
 ```
   
-We also need week column for our analysis and visualization. In below code chunk we are creating one in both dataframes.
+We also need a week column for our analysis and visualization. In the below code chunk we are creating one in both dataframes.
 ```{r, cache = TRUE, warnings=FALSE, results="hide", fig.keep="all", message=FALSE}
 affinity_national_df <- affinity_national_df %>% mutate(week = epiweek(date))
 employment_national_df <- employment_national_df %>% mutate(week = epiweek(date))
@@ -138,7 +137,7 @@ glimpse(affinity_national_df)
 glimpse(employment_national_df)
 ```
 
-After taking closer look at above output we realized the spend_all, spend_all_q1 and spend_all_q4 columns have "char" datatype instead of "dbl". Let's change their data type to a "dbl".  
+After taking a closer look at the above output we realized the spend_all, spend_all_q1 and spend_all_q4 columns have "char" datatype instead of "dbl". Let's change their data type to a "dbl".  
 
 ```{r, cache = TRUE, warnings=FALSE, results="hide", fig.keep="all", message=FALSE}
 
@@ -176,7 +175,7 @@ regression1_df <- left_join(consumer_spending, visits_to_retail, by = c("year", 
 regression1_df <- left_join(regression1_df, employment, by =c("year", "month", "day", "statefips"))
 ```
   
-We need date column with "date" datatype for our analysis, so let's create one using year, month, and day columns.
+We need a date column with "date" datatype for our analysis, so let's create one using year, month, and day columns.
 
 ```{r}
 regression1_df <- regression1_df %>% unite("date", day:month:year, remove = FALSE, sep = "-")
@@ -290,9 +289,9 @@ ggplot(df_national, aes(x = date, y = spend_all)) +
 \newpage 
 ### National Spending Over Time (Split by Income)
 
-From the chart we can see that consumer spending fell sharply when the lockdowns were put in place in early 2020 and has continued to recover ever since as the economy has opened up. From the chart we also see that consumer spending jumps up right after stimulus checks are sent out by the government. This cursory analysis tells us that stimulus checks did have a relatively significant effect on consumption.
+From the chart, we can see that consumer spending fell sharply when the lockdowns were put in place in early 2020 and have continued to recover ever since as the economy has opened up. From the chart, we also see that consumer spending jumps up right after stimulus checks are sent out by the government. This cursory analysis tells us that stimulus checks did have a relatively significant effect on consumption.
 
-We now make the spending data more granular to see the effect of stimulus checks on consumer spending of households in the first income quartile and the fourth income quartile.
+We now make the spending data more granular to see the effect of stimulus checks on the consumer spending of households in the first income quartile and the fourth income quartile.
 
 ```{r plot_spend_all_q1_q2, cache = TRUE, warnings=FALSE, results="hide", fig.keep="all", message=FALSE}
 ggplot(df_national, aes(x = date, y = spend_all_q1)) +
@@ -305,13 +304,13 @@ ggplot(df_national, aes(x = date, y = spend_all_q1)) +
   labs(title = "Consumer Spending Over Time", subtitle = "RED = Low Income, Green = High Income")
 ```
 
-From the above graph we see that the stimulus checks have supported consumer spending for low income households much more strongly than it has for high income households. This makes sense as a large part of the high income households would not have received stimulus checks in the first place and also because spending by low income households would be much more dependent on the stimulus checks than that of high income households.
+From the above graph, we see that the stimulus checks have supported consumer spending for low-income households much more strongly than it has for high-income households. This makes sense as a large part of the high-income households would not have received stimulus checks in the first place and also because spending by low-income households would be much more dependent on the stimulus checks than that of high-income households.
 
-Interestingly, we also see in this graph that the fall in consumer spending by low income households was shallower than that of high income households. Furthermore, spending growth of low income households has remained above that of high income households since the lockdowns. This is interesting because we would normally expect spending of high income households to fall less as they would be more financially secure.
+Interestingly, we also see in this graph that the fall in consumer spending by low-income households was shallower than that of high-income households. Furthermore, the spending growth of low-income households has remained above that of high-income households since the lockdowns. This is interesting because we would normally expect spending of high-income households to fall less as they would be more financially secure.
 
 ### National unemployment rate over time (split by income)
 
-To understand why this is happening, we next take a look at employment levels over time in high income and low income households, as maybe that would explain the difference.
+To understand why this is happening, we next take a look at employment levels over time in high-income and low-income households, as maybe that would explain the difference.
 
 ```{r plot_emp_inc_q1_q2, cache = TRUE, warnings=FALSE, results="hide", fig.keep="all", message=FALSE}
 
@@ -324,7 +323,7 @@ ggplot(emp_national, aes(x = date, y = emp_incq1)) +
   labs(title = "Employment Levels Over Time", subtitle = "RED = Low Income, Green = High Income")
 ```
 
-In the above graph we see that employment in high income households has recovered and even risen above that of pre-pandemic levels. However, employment levels for low income households has remained depressed. This stands in contrast with the initial shallower fall and later faster growth in consumption by low income households. We believe that support provided by the government in terms of stimulus and unemployment checks which disproportionately benefit low income households at least partly is responsible for this consumer spending discrepancy between the two.
+In the above graph, we see that employment in high-income households has recovered and even risen above that of pre-pandemic levels. However, employment levels for low-income households have remained depressed. This stands in contrast with the initial shallower fall and later faster growth in consumption by low-income households. We believe that support provided by the government in terms of stimulus and unemployment checks which disproportionately benefit low-income households at least partly is responsible for this consumer spending discrepancy between the two.
 
 \newpage 
 # Spending Regression Model  
@@ -333,7 +332,7 @@ In the above graph we see that employment in high income households has recovere
 
 In this code chunk, we fit a linear model to the *gps_retail_and_recreation*, *emp*, and *stimulus_checks* features, with the goal of predicting the *spend_all* variable.  The working assumption here is that *spend_all* is a dependent variable, and the others are independent variables.
 
-The reason we chose these three input variables is that *stimulus_checks* are directly relevant to our analysis.  We are trying to identify if these features had a positive or negative effect on the economy. These two features, *gps_retail_and_recreation* and *emp*, were added to help account for change in spending that could not necessarily be accounted for by the *stimulus_checks*.  We chose not to include any other input features because we believe that *gps_retail_and_recreation* and *emp* account for much of the possible variance without over-complicating our linear model.
+The reason we chose these three input variables is that *stimulus_checks* are directly relevant to our analysis.  We are trying to identify if these features had a positive or negative effect on the economy. These two features, *gps_retail_and_recreation* and *emp*, were added to help account for the change in spending that could not necessarily be accounted for by the *stimulus_checks*.  We chose not to include any other input features because we believe that *gps_retail_and_recreation* and *emp* account for much of the possible variance without over-complicating our linear model.
 
 ```{r}
 spending_regression <- lm(spend_all ~ gps_retail_and_recreation + emp + stimulus_checks, regression1_df)
@@ -341,11 +340,11 @@ spending_regression <- lm(spend_all ~ gps_retail_and_recreation + emp + stimulus
 summary(spending_regression)
 ```
 
-Based on the information displayed above, all of the variables we are regressing on are statistically significant for predicting the overall spending. The positive coefficient for the *stimulus_checks* variable in the linear model seems to indicate that *stimulus_checks* are positively correlated with overall consumer spending (the variable we're predicting with our linear model).
+Based on the information displayed above, all of the variables we are regressing on are statistically significant for predicting overall spending. The positive coefficient for the *stimulus_checks* variable in the linear model seems to indicate that *stimulus_checks* are positively correlated with overall consumer spending (the variable we're predicting with our linear model).
 
 Our model is fairly limited in how accurately it predicts overall consumer spending because it is a linear model, and because we've limited ourselves to regressing on three variables for the sake of model simplicity, rather than the 30+ that we could've regressed on.  
 
-Future analysis could be done using neural networks, gradient boosted decision trees, or recurrent neural networks.  We believe that all of these would be able to learn the nuances of our dataset better than a linear model could.
+Future analysis could be done using neural networks, gradient boosted decision trees or recurrent neural networks.  We believe that all of these would be able to learn the nuances of our dataset better than a linear model could.
 
 \newpage 
 # Unemployment Regression Model  
@@ -360,18 +359,18 @@ unemployment_regression <- lm(contclaims_rate_combined ~ 0 + bg_posts + visits_t
 summary(unemployment_regression)
 ```
 
-Of the variables we regressed over visits to retail and recreational establishments are significant at the 99% confidence interval, while job postings (bg_posts) is significant at 94% confidence interval for predicting the change in unemployment since the pre-pandemic baseline. The positive coefficient for the *umemployment_checks* variable in the linear model seems to indicate that *unemployment_checks* are positively correlated with overall unemployment rates.  This is a rather odd way of saying that higher unemployment checks are correlated with higher unemployment rates.
+Of the variables we regressed over visits to retail and recreational establishments are significant at the 99% confidence interval, while job postings (bg_posts) are significant at 94% confidence interval for predicting the change in unemployment since the pre-pandemic baseline. The positive coefficient for the *umemployment_checks* variable in the linear model seems to indicate that *unemployment_checks* are positively correlated with overall unemployment rates.  This is a rather odd way of saying that higher unemployment checks are correlated with higher unemployment rates.
 
 This model is also fairly limited for a couple of reasons: we're using linear modeling and only regressing on a small set of features for the sake of model interpretability and simplicity.
 
-As with the other model, future analysis could be done using neural networks, gradient boosted decision trees, or recurrent neural networks.  We believe that all of these would be able to learn the nuances of our dataset better than a linear model could.
+As with the other model, the future analysis could be done using neural networks, gradient boosted decision trees, or recurrent neural networks.  We believe that all of these would be able to learn the nuances of our dataset better than a linear model could.
 
 \newpage 
 # Biases
 
 ## Model Biases
 
-We were expecting to find that the stimulus checks all had a positive impact on consumer spending, because this is the only outcome that makes any economic sense, as far as we can tell.  This effected how we encoded our stimulus check data into feature variables, and it effected how accurate we thought any given model was while tweaking it.  If a model said that a stimulus check caused a decrease in consumer spending, we considered that model to be almost certainly highly inaccurate.
+We were expecting to find that the stimulus checks all had a positive impact on consumer spending because this is the only outcome that makes any economic sense, as far as we can tell.  This affected how we encoded our stimulus check data into feature variables, and it affected how accurate we thought any given model was while tweaking it.  If a model said that a stimulus check caused a decrease in consumer spending, we considered that model to be almost certainly highly inaccurate.
 
 ## Data Biases
 
