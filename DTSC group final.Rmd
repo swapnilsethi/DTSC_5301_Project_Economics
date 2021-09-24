@@ -2,6 +2,7 @@
 title: "Stimulus Checks and Consumer Spending"
 author: "Aaron Davis, Navya Sonti, Rujula Nadipi, Swapnil Sethi, and Ujas Shah"
 date: "9/2/2021"
+subtitle: "https://github.com/swapnilsethi/DTSC_5301_Project_Economics"
 output:
   pdf_document:  
       pandoc_args: --listings
